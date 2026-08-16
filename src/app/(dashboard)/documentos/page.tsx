@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { documentosApi, DocumentoConObra, CategoriaDocumento, categoriaDocumentoLabels } from '@/lib/documentosApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/apiClient';
 
 export default function DocumentosPage() {
   const [documentos, setDocumentos] = useState<DocumentoConObra[]>([]);
@@ -100,7 +101,7 @@ export default function DocumentosPage() {
                       {new Date(doc.created_at).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right">
-                      <a href={doc.url} target="_blank" rel="noreferrer" className="inline-flex items-center text-accent hover:text-accent-light text-sm font-medium transition-colors">
+                      <a href={getApiUrl(doc.url)} target="_blank" rel="noreferrer" className="inline-flex items-center text-accent hover:text-accent-light text-sm font-medium transition-colors">
                         Abrir
                         <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

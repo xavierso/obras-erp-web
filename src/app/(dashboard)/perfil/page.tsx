@@ -4,6 +4,7 @@ import { perfilApi, PerfilEmpresa } from '@/lib/perfilApi';
 import { equipoApi, ResumenEquipo } from '@/lib/equipoApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
+import { getApiUrl } from '@/lib/apiClient';
 
 export default function PerfilPage() {
   const [perfil, setPerfil] = useState<PerfilEmpresa | null>(null);
@@ -151,7 +152,7 @@ export default function PerfilPage() {
                 />
                 {perfil?.logo_url && !logoFile && (
                   <div className="mt-3">
-                    <img src={perfil.logo_url} alt="Logo actual" className="h-16 rounded object-contain bg-white/5 p-1 border border-white/10" />
+                    <img src={getApiUrl(perfil.logo_url)} alt="Logo actual" className="h-16 rounded object-contain bg-white/5 p-1 border border-white/10" />
                   </div>
                 )}
               </div>

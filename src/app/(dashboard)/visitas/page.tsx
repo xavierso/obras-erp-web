@@ -102,7 +102,7 @@ export default function VisitasGlobalesPage() {
 
                   <div className="mt-3 pt-3 border-t border-white/5 flex justify-end">
                     <Link href={`/obras/${visita.obra_id}/visitas/${visita.id}`}>
-                      <Button variant="secondary" className="!py-1.5 !px-4 text-xs">
+                      <Button variant="outlined" className="!py-1.5 !px-4 text-xs">
                         Ver / Editar
                       </Button>
                     </Link>

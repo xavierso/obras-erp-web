@@ -76,7 +76,7 @@ export default function VisitaDetallePage() {
         No se encontró la visita o hubo un error.
         <div className="mt-4">
           <Link href={`/obras/${obraId}`}>
-            <Button variant="secondary">Volver a la Obra</Button>
+            <Button variant="outlined">Volver a la Obra</Button>
           </Link>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function VisitaDetallePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center space-x-4 mb-2">
-        <Button variant="secondary" className="!px-3 !py-2" onClick={() => router.back()}>
+        <Button variant="outlined" className="!px-3 !py-2" onClick={() => router.back()}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -113,7 +113,7 @@ export default function VisitaDetallePage() {
             <div className="flex justify-between items-center mb-1">
               <label className="block text-text-muted text-sm font-semibold ml-1">Observaciones</label>
               {!isEditing && (
-                <Button type="button" variant="secondary" className="!py-1.5 !px-3 text-xs" onClick={() => setIsEditing(true)}>
+                <Button type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => setIsEditing(true)}>
                   Editar
                 </Button>
               )}
@@ -146,7 +146,7 @@ export default function VisitaDetallePage() {
                     onChange={handleFileChange} 
                     accept="image/*,video/*"
                   />
-                  <Button type="button" variant="secondary" className="!py-1.5 !px-3 text-xs" onClick={() => fileInputRef.current?.click()}>
+                  <Button type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => fileInputRef.current?.click()}>
                     Agregar Archivos
                   </Button>
                 </div>

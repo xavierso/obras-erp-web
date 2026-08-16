@@ -187,7 +187,7 @@ export default function ObraDetailPage() {
                     )}
                     <div className="flex justify-end border-t border-white/5 pt-2 mt-2">
                       <Link href={`/obras/${obraId}/visitas/${visita.id}`}>
-                        <Button variant="secondary" className="!py-1 !px-3 text-xs">
+                        <Button variant="outlined" className="!py-1 !px-3 text-xs">
                           Ver / Editar
                         </Button>
                       </Link>

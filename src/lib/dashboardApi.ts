@@ -1,0 +1,19 @@
+import { apiClient, ApiException } from './apiClient';
+
+export interface ResumenDashboard {
+  obras_activas: number;
+  visitas_hoy: number;
+  visitas_semana: number;
+  documentos_nuevos_semana: number;
+}
+
+export const dashboardApi = {
+  obtenerResumen: async (): Promise<ResumenDashboard> => {
+    try {
+      const response = await apiClient.get('/dashboard/resumen');
+      return response.data;
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
+  }
+};

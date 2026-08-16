@@ -7,7 +7,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
-export default function NuevaCitaPage() {
+import { Suspense } from 'react';
+
+function NuevaCitaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryObraId = searchParams.get('obraId');
@@ -42,7 +44,7 @@ export default function NuevaCitaPage() {
     const offset = tomorrow.getTimezoneOffset() * 60000;
     const localISOTime = (new Date(tomorrow.getTime() - offset)).toISOString().slice(0, 16);
     setFechaHora(localISOTime);
-  }, []);
+  }, [queryObraId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,5 +205,13 @@ export default function NuevaCitaPage() {
         </form>
       </GlassCard>
     </div>
+  );
+}
+
+export default function NuevaCitaPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-text-muted">Cargando...</div>}>
+      <NuevaCitaForm />
+    </Suspense>
   );
 }

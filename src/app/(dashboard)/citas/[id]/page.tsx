@@ -36,7 +36,7 @@ export default function CitaDetailPage() {
         
         setEditFechaHora(localISOTime);
         setEditNotas(data.notas || '');
-        setEditRecordatorio(data.recordatorio_minutos_antes !== null ? data.recordatorio_minutos_antes.toString() : 'none');
+        setEditRecordatorio(data.recordatorio_minutos_antes != null ? data.recordatorio_minutos_antes.toString() : 'none');
         
       } catch (err) {
         const error = err as Error;
@@ -178,7 +178,7 @@ export default function CitaDetailPage() {
                     const offset = dateObj.getTimezoneOffset() * 60000;
                     setEditFechaHora((new Date(dateObj.getTime() - offset)).toISOString().slice(0, 16));
                     setEditNotas(cita.notas || '');
-                    setEditRecordatorio(cita.recordatorio_minutos_antes !== null ? cita.recordatorio_minutos_antes.toString() : 'none');
+                    setEditRecordatorio(cita.recordatorio_minutos_antes != null ? cita.recordatorio_minutos_antes.toString() : 'none');
                   }}>Cancelar</Button>
                   <Button onClick={handleReprogramar} disabled={savingAction}>Guardar Cambios</Button>
                 </div>

@@ -32,17 +32,17 @@ export class ApiException extends Error {
   static fromAxiosError(error: unknown) {
     const err = error as any;
     if (err.response?.data?.detail) {
-      const detail = error.response.data.detail;
+      const detail = err.response.data.detail;
       if (typeof detail === 'string') {
-        return new ApiException(detail, error.response.status);
+        return new ApiException(detail, err.response.status);
       }
       if (Array.isArray(detail) && detail.length > 0 && typeof detail[0] === 'object') {
         const firstError = detail[0];
         const loc = firstError.loc ? firstError.loc[firstError.loc.length - 1] : '';
-        return new ApiException(`${loc}: ${firstError.msg || 'Dato inválido'}`, error.response.status);
+        return new ApiException(`${loc}: ${firstError.msg || 'Dato inválido'}`, err.response.status);
       }
     }
-    if (error.code === 'ECONNABORTED' || !error.response) {
+    if (err.code === 'ECONNABORTED' || !err.response) {
       return new ApiException('No se pudo conectar con el servidor. Revisa que la API esté corriendo y que la URL configurada sea correcta.');
     }
     return new ApiException('Ocurrió un error inesperado. Inténtalo de nuevo.');

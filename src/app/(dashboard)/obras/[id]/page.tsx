@@ -20,25 +20,28 @@ export default function ObraDetailPage() {
   const [error, setError] = useState('');
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
 
+  const fetchObraData = async () => {
+    try {
+      const [obraData, visitasData, citasData] = await Promise.all([
+        obrasApi.obtener(obraId),
+        visitasApi.listar(obraId),
+        citasApi.listar({ obra_id: obraId, estado: 'pendiente' as any })
+      ]);
+      setObra(obraData);
+      setVisitas(visitasData);
+      setCitas(citasData.filter(c => c.estado === 'pendiente' || c.estado === 'completada'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Error al cargar la obra');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [obraData, visitasData, citasData] = await Promise.all([
-          obrasApi.obtener(obraId),
-          visitasApi.listar(obraId),
-          citasApi.listar({ obra_id: obraId, estado: 'pendiente' as any }) // Only show pending initially, or all depending on preference. Let's fetch all.
-        ]);
-        setObra(obraData);
-        setVisitas(visitasData);
-        setCitas(citasData.filter(c => c.estado === 'pendiente' || c.estado === 'completada')); // Only active or completed
-      } catch (err) {
-        const error = err as Error;
-        setError(error.message || 'Error al cargar la obra');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (!isNaN(obraId)) fetchData();
+    if (!isNaN(obraId)) {
+      fetchObraData();
+    }
   }, [obraId]);
 
   const handleCambiarEstado = async (nuevoEstado: EstadoObra) => {
@@ -162,9 +165,9 @@ export default function ObraDetailPage() {
                 No hay visitas registradas para esta obra.
               </div>
             ) : (
-              <div className="space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-4 flex-1 overflow-y-auto pr-2">
                 {visitas.map(visita => (
-                  <div key={visita.id} className="p-4 bg-white/5 border border-white/5 rounded-xl">
+                  <div key={visita.id} className="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-brand-blue/30 transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <span className="flex items-center text-xs font-semibold text-text-main bg-white/10 px-2.5 py-1 rounded-md">
                         <svg className="w-3.5 h-3.5 mr-1.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,8 +183,15 @@ export default function ObraDetailPage() {
                       </span>
                     </div>
                     {visita.descripcion && (
-                      <p className="text-sm text-text-muted">{visita.descripcion}</p>
+                      <p className="text-sm text-text-muted line-clamp-2 mb-3">{visita.descripcion}</p>
                     )}
+                    <div className="flex justify-end border-t border-white/5 pt-2 mt-2">
+                      <Link href={`/obras/${obraId}/visitas/${visita.id}`}>
+                        <Button variant="secondary" className="!py-1 !px-3 text-xs">
+                          Ver / Editar
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

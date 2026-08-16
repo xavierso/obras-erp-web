@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { visitasApi, VisitaConObra } from '@/lib/visitasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { getApiUrl } from '@/lib/apiClient';
 
@@ -10,18 +11,20 @@ export default function VisitasGlobalesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const fetchVisitas = async () => {
+    try {
+      setLoading(true);
+      const data = await visitasApi.listarTodas(50);
+      setVisitas(data);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Error al cargar las visitas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchVisitas = async () => {
-      try {
-        const data = await visitasApi.listarTodas(50);
-        setVisitas(data);
-      } catch (err) {
-        const error = err as Error;
-        setError(error.message || 'Error al cargar las visitas');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchVisitas();
   }, []);
 
@@ -77,8 +80,8 @@ export default function VisitasGlobalesPage() {
                   )}
                   
                   {visita.archivos && visita.archivos.length > 0 && (
-                    <div className="flex gap-2 flex-wrap mt-3">
-                      {visita.archivos.map(archivo => (
+                    <div className="flex gap-2 flex-wrap mt-3 mb-4">
+                      {visita.archivos.slice(0, 4).map(archivo => (
                         <div key={archivo.id} className="w-12 h-12 rounded bg-white/10 overflow-hidden flex items-center justify-center relative">
                            {archivo.tipo === 'foto' ? (
                              <img src={getApiUrl(archivo.url)} alt="Visita adjunto" className="w-full h-full object-cover" />
@@ -89,8 +92,21 @@ export default function VisitasGlobalesPage() {
                            )}
                         </div>
                       ))}
+                      {visita.archivos.length > 4 && (
+                        <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center text-xs text-text-muted font-medium border border-white/10">
+                          +{visita.archivos.length - 4}
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  <div className="mt-3 pt-3 border-t border-white/5 flex justify-end">
+                    <Link href={`/obras/${visita.obra_id}/visitas/${visita.id}`}>
+                      <Button variant="secondary" className="!py-1.5 !px-4 text-xs">
+                        Ver / Editar
+                      </Button>
+                    </Link>
+                  </div>
                 </GlassCard>
               </div>
             </div>

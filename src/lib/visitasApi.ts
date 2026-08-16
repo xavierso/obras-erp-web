@@ -35,6 +35,15 @@ export const visitasApi = {
     }
   },
 
+  obtener: async (obraId: number, visitaId: number): Promise<Visita> => {
+    try {
+      const response = await apiClient.get(`/obras/${obraId}/visitas/${visitaId}`);
+      return response.data;
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
+  },
+
   listarTodas: async (limite: number = 50): Promise<VisitaConObra[]> => {
     try {
       const response = await apiClient.get('/visitas', {
@@ -57,6 +66,27 @@ export const visitasApi = {
       });
 
       const response = await apiClient.post(`/obras/${obraId}/visitas`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
+  },
+
+  actualizar: async (obraId: number, visitaId: number, descripcion?: string, archivos: File[] = []): Promise<Visita> => {
+    try {
+      const formData = new FormData();
+      if (descripcion !== undefined) {
+        formData.append('descripcion', descripcion);
+      }
+      archivos.forEach((file) => {
+        formData.append('archivos', file);
+      });
+
+      const response = await apiClient.put(`/obras/${obraId}/visitas/${visitaId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

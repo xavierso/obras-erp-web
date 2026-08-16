@@ -86,7 +86,6 @@ export default function NuevaVisitaPage() {
                 type="file" 
                 multiple
                 accept="image/*,video/*"
-                capture="environment"
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />

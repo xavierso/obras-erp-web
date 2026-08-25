@@ -8,7 +8,11 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
+import { useAuth } from '@/context/AuthContext';
+import { isUserLector, isUserAdmin, isUserDirector } from '@/lib/authApi';
+
 export default function ObraDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const obraId = parseInt(params.id as string, 10);
@@ -109,9 +113,9 @@ export default function ObraDetailPage() {
             <div className="space-y-2 mt-6">
               <p className="text-xs text-text-muted mb-2">Cambiar estado a:</p>
               <select 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent disabled:opacity-50"
                 value={obra.estado}
-                disabled={cambiandoEstado}
+                disabled={cambiandoEstado || (!isUserAdmin(user) && !isUserDirector(user))}
                 onChange={(e) => handleCambiarEstado(e.target.value as EstadoObra)}
               >
                 {Object.entries(estadoObraLabels).map(([val, label]) => (
@@ -127,7 +131,9 @@ export default function ObraDetailPage() {
           <GlassCard padding="p-5">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-text-main">Próximas Citas</h3>
-              <Link href={`/citas/nuevo?obraId=${obra.id}`} className="text-xs text-accent hover:underline">Programar</Link>
+              {!isUserLector(user) && (
+                <Link href={`/citas/nuevo?obraId=${obra.id}`} className="text-xs text-accent hover:underline">Programar</Link>
+              )}
             </div>
             
             {citas.length === 0 ? (
@@ -155,9 +161,11 @@ export default function ObraDetailPage() {
           <GlassCard padding="p-5" className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-text-main">Visitas ({visitas.length})</h3>
-              <Link href={`/obras/${obra.id}/visitas/nuevo`}>
-                <Button className="!min-h-[40px] px-4 py-2 text-sm">Registrar Visita</Button>
-              </Link>
+              {!isUserLector(user) && (
+                <Link href={`/obras/${obra.id}/visitas/nuevo`}>
+                  <Button className="!min-h-[40px] px-4 py-2 text-sm">Registrar Visita</Button>
+                </Link>
+              )}
             </div>
 
             {visitas.length === 0 ? (

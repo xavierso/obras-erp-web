@@ -1,8 +1,10 @@
 import { apiClient, ApiException } from './apiClient';
+import { RolUsuario } from './authApi';
 
 export interface InvitacionOut {
   id: number;
   email: string;
+  rol: RolUsuario;
   estado: string;
   created_at: string;
   expira_at: string;
@@ -12,6 +14,7 @@ export interface MiembroEquipoOut {
   id: number;
   nombre: string;
   email: string;
+  rol: RolUsuario;
   is_active: boolean;
   created_at: string;
 }
@@ -31,9 +34,9 @@ export const equipoApi = {
     }
   },
 
-  invitar: async (email: string): Promise<string> => {
+  invitar: async (email: string, rol: RolUsuario): Promise<string> => {
     try {
-      const response = await apiClient.post('/equipo/invitar', { email });
+      const response = await apiClient.post('/equipo/invitar', { email, rol });
       return response.data.token;
     } catch (error) {
       throw ApiException.fromAxiosError(error);

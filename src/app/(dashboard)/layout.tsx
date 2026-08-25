@@ -2,6 +2,7 @@
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { isUserAdmin, isUserDirector } from '@/lib/authApi';
 
 export default function DashboardLayout({
   children,
@@ -11,11 +12,11 @@ export default function DashboardLayout({
   const { user, logout } = useAuth();
 
   const navLinks = [
-    { name: 'Inicio', href: '/home' },
+    ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Inicio', href: '/home' }] : []),
     { name: 'Obras', href: '/obras' },
-    { name: 'Visitas', href: '/visitas' },
-    { name: 'Docs', href: '/documentos' },
-    { name: 'Perfil', href: '/perfil' },
+    ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Visitas', href: '/visitas' }] : []),
+    ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Docs', href: '/documentos' }] : []),
+    ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Equipo', href: '/perfil' }] : []),
   ];
 
   return (

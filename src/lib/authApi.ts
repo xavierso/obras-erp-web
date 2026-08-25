@@ -1,6 +1,6 @@
 import { apiClient, ApiException } from './apiClient';
 
-export type RolUsuario = 'admin' | 'inspector';
+export type RolUsuario = 'ADMIN' | 'DIRECTOR' | 'INSPECTOR' | 'LECTOR';
 
 export interface Usuario {
   id: number;
@@ -9,7 +9,10 @@ export interface Usuario {
   rol: RolUsuario;
 }
 
-export const isUserAdmin = (user: Usuario | null) => user?.rol === 'admin';
+export const isUserAdmin = (user: Usuario | null) => user?.rol?.toUpperCase() === 'ADMIN';
+export const isUserDirector = (user: Usuario | null) => isUserAdmin(user) || user?.rol?.toUpperCase() === 'DIRECTOR';
+export const isUserInspector = (user: Usuario | null) => isUserDirector(user) || user?.rol?.toUpperCase() === 'INSPECTOR';
+export const isUserLector = (user: Usuario | null) => user?.rol?.toUpperCase() === 'LECTOR';
 
 export const authApi = {
   registrar: async (email: string, nombre: string, password: string): Promise<void> => {
@@ -53,7 +56,7 @@ export const authApi = {
         id: response.data.id,
         email: response.data.email,
         nombre: response.data.nombre,
-        rol: response.data.rol || 'admin',
+        rol: (response.data.rol as string)?.toUpperCase() as RolUsuario || 'ADMIN',
       };
     } catch (error) {
       throw ApiException.fromAxiosError(error);

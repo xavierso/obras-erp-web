@@ -5,8 +5,11 @@ import { equipoApi, ResumenEquipo } from '@/lib/equipoApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { getApiUrl } from '@/lib/apiClient';
+import { useAuth } from '@/context/AuthContext';
+import { isUserAdmin, RolUsuario } from '@/lib/authApi';
 
 export default function PerfilPage() {
+  const { user } = useAuth();
   const [perfil, setPerfil] = useState<PerfilEmpresa | null>(null);
   const [equipo, setEquipo] = useState<ResumenEquipo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,19 +23,25 @@ export default function PerfilPage() {
 
   // Estados del Formulario de Invitación
   const [emailInvitar, setEmailInvitar] = useState('');
+  const [rolInvitar, setRolInvitar] = useState<RolUsuario>('INSPECTOR');
   const [invitando, setInvitando] = useState(false);
   const [mensajeInvitacion, setMensajeInvitacion] = useState('');
 
   const fetchDatos = async () => {
     try {
-      const [perfilData, equipoData] = await Promise.all([
-        perfilApi.obtener(),
-        equipoApi.obtenerResumen()
-      ]);
-      setPerfil(perfilData);
-      setEquipo(equipoData);
+      const promises: Promise<unknown>[] = [equipoApi.obtenerResumen()];
+      if (isUserAdmin(user)) {
+        promises.push(perfilApi.obtener());
+      }
 
+      const results = await Promise.all(promises);
+      const equipoData = results[0] as ResumenEquipo;
+      const perfilData = results.length > 1 ? results[1] as PerfilEmpresa : null;
+
+      setEquipo(equipoData);
+      
       if (perfilData) {
+        setPerfil(perfilData);
         setNombreEmpresa(perfilData.nombre_empresa);
         setColorPrincipal(perfilData.color_principal);
       }
@@ -68,7 +77,7 @@ export default function PerfilPage() {
     setInvitando(true);
     setMensajeInvitacion('');
     try {
-      const token = await equipoApi.invitar(emailInvitar);
+      const token = await equipoApi.invitar(emailInvitar, rolInvitar);
       setMensajeInvitacion(`Invitación creada. Comparte este token temporal con el usuario: ${token}`);
       setEmailInvitar('');
       await fetchDatos(); // Recargar listas
@@ -107,73 +116,75 @@ export default function PerfilPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* SECCIÓN PERFIL */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold text-text-main border-b border-white/10 pb-2">Perfil de Empresa</h2>
-          <GlassCard padding="p-6">
-            <form onSubmit={handleGuardarPerfil} className="space-y-5">
-              <div>
-                <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Nombre de la Empresa</label>
-                <input 
-                  type="text"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
-                  value={nombreEmpresa}
-                  onChange={(e) => setNombreEmpresa(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Color Principal (Hex)</label>
-                <div className="flex items-center space-x-3">
-                  <input 
-                    type="color"
-                    className="w-12 h-12 bg-transparent rounded cursor-pointer"
-                    value={colorPrincipal}
-                    onChange={(e) => setColorPrincipal(e.target.value)}
-                  />
+        {isUserAdmin(user) && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-text-main border-b border-white/10 pb-2">Perfil de Empresa</h2>
+            <GlassCard padding="p-6">
+              <form onSubmit={handleGuardarPerfil} className="space-y-5">
+                <div>
+                  <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Nombre de la Empresa</label>
                   <input 
                     type="text"
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent font-mono"
-                    value={colorPrincipal}
-                    onChange={(e) => setColorPrincipal(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                    value={nombreEmpresa}
+                    onChange={(e) => setNombreEmpresa(e.target.value)}
+                    required
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Logo de la Empresa</label>
-                <input 
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) setLogoFile(e.target.files[0]);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-text-main hover:file:bg-white/20"
-                />
-                {perfil?.logo_url && !logoFile && (
-                  <div className="mt-3">
-                    <img src={getApiUrl(perfil.logo_url)} alt="Logo actual" className="h-16 rounded object-contain bg-white/5 p-1 border border-white/10" />
+                <div>
+                  <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Color Principal (Hex)</label>
+                  <div className="flex items-center space-x-3">
+                    <input 
+                      type="color"
+                      className="w-12 h-12 bg-transparent rounded cursor-pointer"
+                      value={colorPrincipal}
+                      onChange={(e) => setColorPrincipal(e.target.value)}
+                    />
+                    <input 
+                      type="text"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent font-mono"
+                      value={colorPrincipal}
+                      onChange={(e) => setColorPrincipal(e.target.value)}
+                    />
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="pt-2">
-                <Button type="submit" disabled={guardandoPerfil} className="w-full">
-                  {guardandoPerfil ? 'Guardando...' : 'Guardar Cambios'}
-                </Button>
-              </div>
-            </form>
-          </GlassCard>
-        </div>
+                <div>
+                  <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Logo de la Empresa</label>
+                  <input 
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files) setLogoFile(e.target.files[0]);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-text-main hover:file:bg-white/20"
+                  />
+                  {perfil?.logo_url && !logoFile && (
+                    <div className="mt-3">
+                      <img src={getApiUrl(perfil.logo_url)} alt="Logo actual" className="h-16 rounded object-contain bg-white/5 p-1 border border-white/10" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  <Button type="submit" disabled={guardandoPerfil} className="w-full">
+                    {guardandoPerfil ? 'Guardando...' : 'Guardar Cambios'}
+                  </Button>
+                </div>
+              </form>
+            </GlassCard>
+          </div>
+        )}
 
         {/* SECCIÓN EQUIPO */}
-        <div className="space-y-6">
+        <div className={`space-y-6 ${!isUserAdmin(user) ? 'lg:col-span-2' : ''}`}>
           <h2 className="text-xl font-bold text-text-main border-b border-white/10 pb-2">Gestión de Equipo</h2>
           
           {/* Invitar */}
           <GlassCard padding="p-6">
-            <h3 className="font-semibold text-text-main mb-3 text-sm">Invitar a un Inspector</h3>
-            <form onSubmit={handleInvitar} className="flex gap-3">
+            <h3 className="font-semibold text-text-main mb-3 text-sm">Invitar a un Miembro</h3>
+            <form onSubmit={handleInvitar} className="flex flex-col sm:flex-row gap-3">
               <input 
                 type="email"
                 placeholder="correo@ejemplo.com"
@@ -182,7 +193,16 @@ export default function PerfilPage() {
                 onChange={(e) => setEmailInvitar(e.target.value)}
                 required
               />
-              <Button type="submit" disabled={invitando} className="px-6 py-2.5 !min-h-0">
+              <select
+                value={rolInvitar}
+                onChange={(e) => setRolInvitar(e.target.value as RolUsuario)}
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm focus:outline-none focus:border-accent"
+              >
+                {isUserAdmin(user) && <option value="DIRECTOR" className="bg-background text-text-main">Director</option>}
+                <option value="INSPECTOR" className="bg-background text-text-main">Inspector</option>
+                <option value="LECTOR" className="bg-background text-text-main">Lector</option>
+              </select>
+              <Button type="submit" disabled={invitando} className="px-6 py-2.5 !min-h-0 whitespace-nowrap">
                 {invitando ? '...' : 'Invitar'}
               </Button>
             </form>

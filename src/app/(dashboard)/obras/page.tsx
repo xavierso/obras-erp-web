@@ -4,8 +4,11 @@ import { obrasApi, Obra, estadoObraLabels, EstadoObra } from '@/lib/obrasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { isUserAdmin, isUserDirector } from '@/lib/authApi';
 
 export default function ObrasPage() {
+  const { user } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,9 +50,11 @@ export default function ObrasPage() {
           <h1 className="text-2xl font-bold text-text-main">Mis Obras</h1>
           <p className="text-text-muted text-sm">Gestiona tus proyectos activos</p>
         </div>
-        <Link href="/obras/nuevo">
-          <Button className="px-6">Nueva Obra</Button>
-        </Link>
+        {(isUserAdmin(user) || isUserDirector(user)) && (
+          <Link href="/obras/nuevo">
+            <Button className="px-6">Nueva Obra</Button>
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -63,9 +68,11 @@ export default function ObrasPage() {
       ) : obras.length === 0 ? (
         <GlassCard className="text-center py-12">
           <p className="text-text-muted mb-4">No tienes obras registradas</p>
-          <Link href="/obras/nuevo">
-            <Button variant="outlined" className="w-auto px-6">Crear mi primera obra</Button>
-          </Link>
+          {(isUserAdmin(user) || isUserDirector(user)) && (
+            <Link href="/obras/nuevo">
+              <Button variant="outlined" className="w-auto px-6">Crear mi primera obra</Button>
+            </Link>
+          )}
         </GlassCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

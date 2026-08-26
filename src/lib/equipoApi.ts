@@ -39,6 +39,7 @@ export const equipoApi = {
       const response = await apiClient.post('/equipo/invitar', { email, rol });
       return response.data.token;
     } catch (error) {
+      console.error('Error al invitar:', error);
       throw ApiException.fromAxiosError(error);
     }
   },

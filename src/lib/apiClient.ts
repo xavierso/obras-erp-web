@@ -43,8 +43,8 @@ export class ApiException extends Error {
       }
     }
     if (err.code === 'ECONNABORTED' || !err.response) {
-      return new ApiException('No se pudo conectar con el servidor. Revisa que la API esté corriendo y que la URL configurada sea correcta.');
+      return new ApiException(`No se pudo conectar con el servidor. Revisa que la API esté corriendo y que la URL configurada sea correcta. (Code: ${err.code}, Message: ${err.message})`);
     }
-    return new ApiException('Ocurrió un error inesperado. Inténtalo de nuevo.');
+    return new ApiException(`Ocurrió un error inesperado: ${err.message}. Inténtalo de nuevo.`);
   }
 }

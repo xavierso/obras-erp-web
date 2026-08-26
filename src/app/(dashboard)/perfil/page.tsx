@@ -198,7 +198,7 @@ export default function PerfilPage() {
               <input 
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm focus:outline-none focus:border-accent"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 min-h-[52px] text-text-main text-sm focus:outline-none focus:border-accent"
                 value={emailInvitar}
                 onChange={(e) => setEmailInvitar(e.target.value)}
                 required
@@ -206,13 +206,13 @@ export default function PerfilPage() {
               <select
                 value={rolInvitar}
                 onChange={(e) => setRolInvitar(e.target.value as RolUsuario)}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm focus:outline-none focus:border-accent"
+                className="bg-white/5 border border-white/10 rounded-xl px-4 min-h-[52px] text-text-main text-sm focus:outline-none focus:border-accent"
               >
                 {isUserAdmin(user) && <option value="DIRECTOR" className="bg-background text-text-main">Director</option>}
                 <option value="INSPECTOR" className="bg-background text-text-main">Inspector</option>
                 <option value="LECTOR" className="bg-background text-text-main">Lector</option>
               </select>
-              <Button type="submit" disabled={invitando} className="px-6 py-2.5 !min-h-0 whitespace-nowrap">
+              <Button type="submit" disabled={invitando} className="px-6 whitespace-nowrap" fullWidth={false}>
                 {invitando ? '...' : 'Invitar'}
               </Button>
             </form>

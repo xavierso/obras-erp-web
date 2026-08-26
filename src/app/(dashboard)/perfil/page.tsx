@@ -99,6 +99,16 @@ export default function PerfilPage() {
     }
   };
 
+  const handleCancelarInvitacion = async (id: number) => {
+    if (!confirm('¿Estás seguro de cancelar esta invitación?')) return;
+    try {
+      await equipoApi.cancelarInvitacion(id);
+      await fetchDatos();
+    } catch (err) {
+      alert('Error al cancelar la invitación');
+    }
+  };
+
   if (loading) return <div className="text-center py-10 text-text-muted">Cargando perfil...</div>;
 
   return (
@@ -228,6 +238,28 @@ export default function PerfilPage() {
                     </div>
                     <button onClick={() => handleDarDeBaja(miembro.id)} className="text-xs text-error hover:underline px-2 py-1">
                       Dar de baja
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </GlassCard>
+
+          {/* Invitaciones Pendientes */}
+          <GlassCard padding="p-6">
+            <h3 className="font-semibold text-text-main mb-4 text-sm">Invitaciones Pendientes</h3>
+            {equipo?.invitaciones_pendientes.length === 0 ? (
+              <p className="text-text-muted text-sm">No hay invitaciones pendientes.</p>
+            ) : (
+              <div className="space-y-3">
+                {equipo?.invitaciones_pendientes.map(invitacion => (
+                  <div key={invitacion.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                    <div>
+                      <p className="text-sm font-semibold text-text-main">{invitacion.email}</p>
+                      <p className="text-xs text-text-muted">Rol: {invitacion.rol} • Expira: {new Date(invitacion.expira_at).toLocaleDateString()}</p>
+                    </div>
+                    <button onClick={() => handleCancelarInvitacion(invitacion.id)} className="text-xs text-error hover:underline px-2 py-1">
+                      Cancelar
                     </button>
                   </div>
                 ))}

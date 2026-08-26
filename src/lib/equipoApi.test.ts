@@ -26,8 +26,8 @@ describe('equipoApi', () => {
 
   it('invitar() calls POST', async () => {
     (apiClient.post as jest.Mock).mockResolvedValueOnce({ data: { token: '123' } });
-    const token = await equipoApi.invitar('test@test.com');
-    expect(apiClient.post).toHaveBeenCalledWith('/equipo/invitar', { email: 'test@test.com' });
+    const token = await equipoApi.invitar('test@test.com', 'INSPECTOR');
+    expect(apiClient.post).toHaveBeenCalledWith('/equipo/invitar', { email: 'test@test.com', rol: 'INSPECTOR' });
     expect(token).toBe('123');
   });
 

@@ -1,20 +1,36 @@
 'use client';
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { documentosApi, CategoriaDocumento, categoriaDocumentoLabels } from '@/lib/documentosApi';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { documentosApi, CategoriaDocumento, categoriaDocumentoLabels } from '@/lib/documentosApi';
+import { obrasApi, Obra } from '@/lib/obrasApi';
 import Link from 'next/link';
 
-export default function NuevoDocumentoPage() {
-  const params = useParams();
+export default function NuevoDocumentoGlobalPage() {
   const router = useRouter();
-  const obraId = parseInt(params.id as string, 10);
-  
+  const [obras, setObras] = useState<Obra[]>([]);
+  const [obraId, setObraId] = useState<number | ''>('');
   const [categoria, setCategoria] = useState<CategoriaDocumento>(CategoriaDocumento.planos);
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  const [cargandoObras, setCargandoObras] = useState(true);
+  const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchObras = async () => {
+      try {
+        const data = await obrasApi.listar();
+        setObras(data);
+      } catch (err: any) {
+        setError('Error al cargar las obras disponibles');
+      } finally {
+        setCargandoObras(false);
+      }
+    };
+    fetchObras();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -24,37 +40,38 @@ export default function NuevoDocumentoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isNaN(obraId)) return;
+    if (!obraId) {
+      setError('Por favor, selecciona una obra');
+      return;
+    }
     if (!archivo) {
       setError('Por favor, selecciona un archivo');
       return;
     }
     
     setError('');
-    setLoading(true);
+    setSubiendo(true);
     
     try {
-      await documentosApi.subir(obraId, categoria, archivo);
-      // Tras subirlo volvemos a la obra (donde asumo que podríamos agregar una pestaña de documentos después, pero por ahora volvemos)
-      router.push(`/obras/${obraId}`);
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message || 'Error al subir el documento');
-      setLoading(false);
+      await documentosApi.subir(Number(obraId), categoria, archivo);
+      router.push('/documentos');
+    } catch (err: any) {
+      setError(err.message || 'Error al subir el documento');
+      setSubiendo(false);
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center space-x-4 mb-2">
-        <Link href={`/obras/${obraId}`} className="text-text-muted hover:text-accent transition-colors">
+        <Link href="/documentos" className="text-text-muted hover:text-accent transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-text-main">Subir Documento</h1>
-          <p className="text-text-muted text-sm">Añade un nuevo archivo a la obra</p>
+          <p className="text-text-muted text-sm">Añade un archivo a la biblioteca</p>
         </div>
       </div>
 
@@ -65,14 +82,39 @@ export default function NuevoDocumentoPage() {
               {error}
             </div>
           )}
-          
+
           <div>
-            <label htmlFor="categoria" className="block text-text-muted text-sm font-semibold mb-2 ml-1">
-              Categoría del Documento
+            <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">
+              Obra / Proyecto
             </label>
             <div className="relative">
               <select 
-                id="categoria"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text-main focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer [color-scheme:dark]"
+                value={obraId}
+                onChange={(e) => setObraId(e.target.value ? Number(e.target.value) : '')}
+                disabled={cargandoObras}
+              >
+                <option value="" className="bg-surface text-text-main">-- Selecciona una obra --</option>
+                {obras.map(obra => (
+                  <option key={obra.id} value={obra.id} className="bg-surface text-text-main">
+                    {obra.codigo} - {obra.nombre}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">
+              Categoría
+            </label>
+            <div className="relative">
+              <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text-main focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer [color-scheme:dark]"
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value as CategoriaDocumento)}
@@ -93,9 +135,8 @@ export default function NuevoDocumentoPage() {
 
           <div>
             <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">
-              Archivo a subir (PDF, Imagen, etc.)
+              Archivo a subir
             </label>
-            
             <div className="relative w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-text-muted bg-white/5 hover:bg-white/10 hover:border-accent transition-all group overflow-hidden">
               <input 
                 type="file" 
@@ -115,12 +156,14 @@ export default function NuevoDocumentoPage() {
           </div>
 
           <div className="pt-4 flex gap-4">
-            <Link href={`/obras/${obraId}`} className="flex-1">
-              <Button type="button" variant="outlined" className="w-full">Cancelar</Button>
+            <Link href="/documentos" className="flex-1">
+              <Button type="button" variant="outlined" className="w-full" disabled={subiendo}>
+                Cancelar
+              </Button>
             </Link>
             <div className="flex-1">
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? 'Subiendo...' : 'Guardar Documento'}
+              <Button type="submit" disabled={subiendo || cargandoObras} className="w-full">
+                {subiendo ? 'Subiendo...' : 'Guardar Documento'}
               </Button>
             </div>
           </div>

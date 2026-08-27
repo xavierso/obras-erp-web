@@ -146,17 +146,24 @@ export default function CitaDetailPage() {
                   </div>
                   <div>
                     <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Recordatorio</label>
-                    <select 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent appearance-none"
-                      value={editRecordatorio}
-                      onChange={(e) => setEditRecordatorio(e.target.value)}
-                    >
-                      <option value="none" className="bg-bg-deep text-text-main">Sin recordatorio</option>
-                      <option value="0" className="bg-bg-deep text-text-main">Al momento exacto</option>
-                      <option value="30" className="bg-bg-deep text-text-main">30 minutos antes</option>
-                      <option value="180" className="bg-bg-deep text-text-main">3 horas antes</option>
-                      <option value="1440" className="bg-bg-deep text-text-main">1 día antes</option>
-                    </select>
+                    <div className="relative">
+                      <select 
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
+                        value={editRecordatorio}
+                        onChange={(e) => setEditRecordatorio(e.target.value)}
+                      >
+                        <option value="none" className="bg-surface text-text-main">Sin recordatorio</option>
+                        <option value="0" className="bg-surface text-text-main">Al momento exacto</option>
+                        <option value="30" className="bg-surface text-text-main">30 minutos antes</option>
+                        <option value="180" className="bg-surface text-text-main">3 horas antes</option>
+                        <option value="1440" className="bg-surface text-text-main">1 día antes</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

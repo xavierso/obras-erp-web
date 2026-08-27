@@ -203,15 +203,22 @@ export default function PerfilPage() {
                 onChange={(e) => setEmailInvitar(e.target.value)}
                 required
               />
-              <select
-                value={rolInvitar}
-                onChange={(e) => setRolInvitar(e.target.value as RolUsuario)}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 h-11 text-text-main text-sm focus:outline-none focus:border-accent"
-              >
-                {isUserAdmin(user) && <option value="DIRECTOR" className="bg-background text-text-main">Director</option>}
-                <option value="INSPECTOR" className="bg-background text-text-main">Inspector</option>
-                <option value="LECTOR" className="bg-background text-text-main">Lector</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={rolInvitar}
+                  onChange={(e) => setRolInvitar(e.target.value as RolUsuario)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 pr-10 h-11 text-text-main text-sm focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
+                >
+                  {isUserAdmin(user) && <option value="DIRECTOR" className="bg-surface text-text-main">Director</option>}
+                  <option value="INSPECTOR" className="bg-surface text-text-main">Inspector</option>
+                  <option value="LECTOR" className="bg-surface text-text-main">Lector</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-muted">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
               <Button type="submit" disabled={invitando} className="px-6 h-11 !min-h-0 whitespace-nowrap" fullWidth={false}>
                 {invitando ? '...' : 'Invitar'}
               </Button>

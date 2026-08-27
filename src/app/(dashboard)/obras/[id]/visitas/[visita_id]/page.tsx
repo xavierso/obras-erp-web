@@ -97,19 +97,40 @@ export default function VisitaDetallePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center space-x-4 mb-2">
+      <div className="flex items-center space-x-4 mb-4">
         <Button variant="outlined" className="!px-3 !py-2" onClick={() => router.back()}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-text-main">
             {isEditing ? 'Editar Visita' : 'Detalles de la Visita'}
           </h1>
           <p className="text-text-muted text-sm">
             {new Date(visita.fecha).toLocaleString()}
           </p>
+        </div>
+        <div>
+          <Button 
+            fullWidth={false}
+            onClick={async () => {
+            try {
+              setIsSaving(true);
+              const { informesApi } = await import('@/lib/informesApi');
+              const blob = await informesApi.generar(obraId, { visita_id: visitaId });
+              informesApi.descargarBlob(blob, `informe_obra_${obraId}_visita_${visitaId}.pdf`);
+            } catch (err: any) {
+              setError(err.message || 'Error al generar informe');
+            } finally {
+              setIsSaving(false);
+            }
+          }} disabled={isSaving} className="!min-h-[40px] px-5 py-2 flex items-center space-x-2 text-sm">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Generar Informe</span>
+          </Button>
         </div>
       </div>
 

@@ -16,6 +16,10 @@ import { ListaIncidencias } from '@/components/incidencias/ListaIncidencias';
 import { useAuth } from '@/context/AuthContext';
 import { isUserLector, isUserAdmin, isUserDirector } from '@/lib/authApi';
 
+import { ModalInformeObra } from '@/components/informes/ModalInformeObra';
+import { documentosApi, Documento } from '@/lib/documentosApi';
+import { ListaDocumentos } from '@/components/documentos/ListaDocumentos';
+
 export default function ObraDetailPage() {
   const { user } = useAuth();
   const params = useParams();
@@ -25,26 +29,30 @@ export default function ObraDetailPage() {
   const [obra, setObra] = useState<Obra | null>(null);
   const [visitas, setVisitas] = useState<Visita[]>([]);
   const [citas, setCitas] = useState<CitaVisita[]>([]);
+  const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
+  const [modalInformeOpen, setModalInformeOpen] = useState(false);
 
   const fetchObraData = async () => {
     try {
-      const [obraData, visitasData, citasData, tareasData, incidenciasData] = await Promise.all([
+      const [obraData, visitasData, citasData, tareasData, incidenciasData, documentosData] = await Promise.all([
         obrasApi.obtener(obraId),
         visitasApi.listar(obraId),
         citasApi.listar({ obra_id: obraId, estado: 'pendiente' as any }),
         tareasApi.listarPorObra(obraId),
-        incidenciasApi.listarPorObra(obraId)
+        incidenciasApi.listarPorObra(obraId),
+        documentosApi.listar(obraId)
       ]);
       setObra(obraData);
       setVisitas(visitasData);
       setCitas(citasData.filter(c => c.estado === 'pendiente' || c.estado === 'completada'));
       setTareas(tareasData);
       setIncidencias(incidenciasData);
+      setDocumentos(documentosData);
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Error al cargar la obra');
@@ -90,7 +98,28 @@ export default function ObraDetailPage() {
             <p className="text-text-muted text-sm font-mono">{obra.codigo}</p>
           </div>
         </div>
+        
+        <div>
+          <Button 
+            fullWidth={false}
+            onClick={() => setModalInformeOpen(true)} 
+            className="!min-h-[40px] px-5 py-2 flex items-center space-x-2 text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Generar Informe</span>
+          </Button>
+        </div>
       </div>
+
+      {modalInformeOpen && (
+        <ModalInformeObra 
+          obraId={obra.id} 
+          obraCodigo={obra.codigo} 
+          onClose={() => setModalInformeOpen(false)} 
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -177,13 +206,13 @@ export default function ObraDetailPage() {
               <p className="text-xs text-text-muted mb-2">Cambiar estado a:</p>
               <div className="relative">
                 <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-text-main focus:outline-none focus:border-accent disabled:opacity-50 appearance-none cursor-pointer"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-text-main focus:outline-none focus:border-accent disabled:opacity-50 appearance-none cursor-pointer [color-scheme:dark]"
                   value={obra.estado}
                   disabled={cambiandoEstado || (!isUserAdmin(user) && !isUserDirector(user))}
                   onChange={(e) => handleCambiarEstado(e.target.value as EstadoObra)}
                 >
                   {Object.entries(estadoObraLabels).map(([val, label]) => (
-                    <option key={val} value={val} className="bg-bg-deep text-text-main">
+                    <option key={val} value={val} className="bg-surface text-text-main">
                       {label}
                     </option>
                   ))}
@@ -245,6 +274,17 @@ export default function ObraDetailPage() {
             <ListaIncidencias
               obraId={obra.id}
               incidencias={incidencias}
+              onRefresh={fetchObraData}
+            />
+          </GlassCard>
+        </div>
+
+        {/* ROW 4: Documentos */}
+        <div className="lg:col-span-3 h-full">
+          <GlassCard padding="p-5" className="h-full">
+            <ListaDocumentos 
+              obraId={obra.id}
+              documentos={documentos}
               onRefresh={fetchObraData}
             />
           </GlassCard>

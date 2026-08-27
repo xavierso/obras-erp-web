@@ -4,6 +4,7 @@ import { documentosApi, DocumentoConObra, CategoriaDocumento, categoriaDocumento
 import { GlassCard } from '@/components/ui/GlassCard';
 import Link from 'next/link';
 import { getApiUrl } from '@/lib/apiClient';
+import { Button } from '@/components/ui/Button';
 
 export default function DocumentosPage() {
   const [documentos, setDocumentos] = useState<DocumentoConObra[]>([]);
@@ -11,19 +12,20 @@ export default function DocumentosPage() {
   const [error, setError] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState<CategoriaDocumento | ''>('');
 
+  const fetchDocs = async () => {
+    setLoading(true);
+    try {
+      const data = await documentosApi.listarTodos(filtroCategoria ? filtroCategoria : undefined);
+      setDocumentos(data);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Error al cargar documentos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDocs = async () => {
-      setLoading(true);
-      try {
-        const data = await documentosApi.listarTodos(filtroCategoria ? filtroCategoria : undefined);
-        setDocumentos(data);
-      } catch (err) {
-        const error = err as Error;
-        setError(error.message || 'Error al cargar documentos');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDocs();
   }, [filtroCategoria]);
 
@@ -35,16 +37,37 @@ export default function DocumentosPage() {
           <p className="text-text-muted text-sm">Biblioteca global de la empresa</p>
         </div>
         
-        <select
-          value={filtroCategoria}
-          onChange={(e) => setFiltroCategoria(e.target.value as CategoriaDocumento | '')}
-          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-text-main text-sm focus:outline-none focus:border-accent"
-        >
-          <option value="" className="bg-bg-deep">Todas las categorías</option>
-          {Object.entries(categoriaDocumentoLabels).map(([val, label]) => (
-            <option key={val} value={val} className="bg-bg-deep text-text-main">{label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <select
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value as CategoriaDocumento | '')}
+              className="w-auto min-w-[200px] bg-white/5 border border-white/10 rounded-xl px-4 py-2 pr-10 text-text-main text-sm focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
+            >
+              <option value="" className="bg-surface text-text-main">Todas las categorías</option>
+              {Object.entries(categoriaDocumentoLabels).map(([val, label]) => (
+                <option key={val} value={val} className="bg-surface text-text-main">{label}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-muted">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          
+          <Link href="/documentos/nuevo">
+            <Button 
+              fullWidth={false}
+              className="!min-h-[38px] px-4 py-1.5 text-sm flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Subir Documento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {error && (

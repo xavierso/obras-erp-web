@@ -6,6 +6,10 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { getApiUrl } from '@/lib/apiClient';
+import { tareasApi, Tarea } from '@/lib/tareasApi';
+import { ListaTareas } from '@/components/tareas/ListaTareas';
+import { incidenciasApi, Incidencia } from '@/lib/incidenciasApi';
+import { ListaIncidencias } from '@/components/incidencias/ListaIncidencias';
 
 export default function VisitaDetallePage() {
   const params = useParams();
@@ -20,6 +24,8 @@ export default function VisitaDetallePage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [tareas, setTareas] = useState<Tarea[]>([]);
+  const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -27,9 +33,15 @@ export default function VisitaDetallePage() {
       if (isNaN(obraId) || isNaN(visitaId)) return;
       try {
         setLoading(true);
-        const data = await visitasApi.obtener(obraId, visitaId);
+        const [data, tareasData, incidenciasData] = await Promise.all([
+          visitasApi.obtener(obraId, visitaId),
+          tareasApi.listarPorObra(obraId, { visita_id: visitaId }),
+          incidenciasApi.listarPorObra(obraId, { visita_id: visitaId })
+        ]);
         setVisita(data);
         setDescripcion(data.descripcion || '');
+        setTareas(tareasData);
+        setIncidencias(incidenciasData);
       } catch (err) {
         const error = err as Error;
         setError(error.message || 'Error al cargar la visita');
@@ -200,6 +212,28 @@ export default function VisitaDetallePage() {
           )}
         </form>
       </GlassCard>
+
+      {/* Tareas de la Visita */}
+      <div className="space-y-6">
+        <GlassCard padding="p-5">
+          <ListaTareas 
+            obraId={obraId} 
+            visitaId={visitaId} 
+            tareas={tareas} 
+            onRefresh={() => tareasApi.listarPorObra(obraId, { visita_id: visitaId }).then(setTareas)} 
+          />
+        </GlassCard>
+
+        {/* Incidencias de la Visita */}
+        <GlassCard padding="p-5">
+          <ListaIncidencias
+            obraId={obraId}
+            visitaId={visitaId}
+            incidencias={incidencias}
+            onRefresh={() => incidenciasApi.listarPorObra(obraId, { visita_id: visitaId }).then(setIncidencias)}
+          />
+        </GlassCard>
+      </div>
     </div>
   );
 }

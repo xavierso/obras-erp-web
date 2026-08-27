@@ -14,6 +14,9 @@ export default function DashboardLayout({
   const navLinks = [
     ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Inicio', href: '/home' }] : []),
     { name: 'Obras', href: '/obras' },
+    { name: 'Tareas', href: '/tareas' },
+    { name: 'Incidencias', href: '/incidencias' },
+    ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Citas', href: '/citas' }] : []),
     ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Visitas', href: '/visitas' }] : []),
     ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Docs', href: '/documentos' }] : []),
     ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Equipo', href: '/perfil' }] : []),

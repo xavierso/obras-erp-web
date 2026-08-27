@@ -146,8 +146,8 @@ export function ListaIncidencias({ obraId, visitaId, incidencias, onRefresh, hid
                 {isExpanded && (
                   <div className="p-4 pt-0 border-t border-white/5 bg-black/10">
                     <div className="flex justify-end space-x-2 mt-3 mb-2">
-                      <Button variant="secondary" onClick={() => setIncidenciaEditando(incidencia.id)} className="!py-1 !px-2 text-[10px]">Editar</Button>
-                      <Button variant="danger" onClick={() => handleEliminar(incidencia.id)} className="!py-1 !px-2 text-[10px]">Eliminar</Button>
+                      <Button variant="outlined" onClick={() => setIncidenciaEditando(incidencia.id)} className="!py-1 !px-2 text-[10px]">Editar</Button>
+                      <Button variant="text" onClick={() => handleEliminar(incidencia.id)} className="!py-1 !px-2 text-[10px] text-error hover:text-red-400">Eliminar</Button>
                     </div>
 
                     <div className="space-y-4">

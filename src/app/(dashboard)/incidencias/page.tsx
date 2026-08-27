@@ -74,7 +74,7 @@ export default function IncidenciasGlobalPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-text-main">Incidencias Globales</h1>
-        <Button variant="secondary" fullWidth={false} onClick={cargarDatos} className="!py-1.5 px-3 text-sm">
+        <Button variant="outlined" fullWidth={false} onClick={cargarDatos} className="!py-1.5 px-3 text-sm">
           Actualizar
         </Button>
       </div>

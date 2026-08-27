@@ -1,5 +1,5 @@
 import { apiClient, ApiException } from './apiClient';
-import { UsuarioOut } from './equipoApi';
+import { MiembroEquipoOut } from './equipoApi';
 
 export enum EstadoTarea {
   PENDIENTE = 'PENDIENTE',
@@ -28,7 +28,7 @@ export interface HistorialTarea {
   estado_anterior?: EstadoTarea;
   estado_nuevo: EstadoTarea;
   fecha: string;
-  usuario: UsuarioOut;
+  usuario: MiembroEquipoOut;
 }
 
 export interface Tarea {
@@ -45,8 +45,8 @@ export interface Tarea {
   created_at: string;
   updated_at: string;
   
-  responsable?: UsuarioOut;
-  creador: UsuarioOut;
+  responsable?: MiembroEquipoOut;
+  creador: MiembroEquipoOut;
   historial: HistorialTarea[];
   archivos: TareaArchivo[];
 }

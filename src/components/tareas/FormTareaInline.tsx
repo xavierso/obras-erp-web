@@ -128,7 +128,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
             <div className="relative">
               <select 
                 value={responsableId} 
-                onChange={e => setResponsableId(e.target.value === '' ? '' : e.target.value)}
+                onChange={e => setResponsableId(e.target.value === '' ? '' : Number(e.target.value))}
                 disabled={loadingMiembros}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer"
               >
@@ -207,7 +207,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
         </div>
 
         <div className="flex justify-end space-x-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={loading} className="!py-1.5 !px-3 text-xs">
+          <Button type="button" variant="outlined" onClick={onClose} disabled={loading} className="!py-1.5 !px-3 text-xs">
             Cancelar
           </Button>
           <Button type="submit" disabled={loading} className="!py-1.5 !px-3 text-xs">

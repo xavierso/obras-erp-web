@@ -1,5 +1,5 @@
 import { apiClient, ApiException } from './apiClient';
-import { UsuarioOut } from './equipoApi';
+import { MiembroEquipoOut } from './equipoApi';
 
 export enum EstadoIncidencia {
   NUEVA = 'NUEVA',
@@ -26,7 +26,7 @@ export interface HistorialIncidencia {
   estado_anterior?: EstadoIncidencia;
   estado_nuevo: EstadoIncidencia;
   fecha: string;
-  usuario: UsuarioOut;
+  usuario: MiembroEquipoOut;
 }
 
 export interface Incidencia {
@@ -46,8 +46,8 @@ export interface Incidencia {
   created_at: string;
   updated_at: string;
   
-  responsable?: UsuarioOut;
-  creador: UsuarioOut;
+  responsable?: MiembroEquipoOut;
+  creador: MiembroEquipoOut;
   historial: HistorialIncidencia[];
   archivos: IncidenciaArchivo[];
   tareas: any[];

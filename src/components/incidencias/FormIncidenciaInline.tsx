@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { incidenciasApi, Incidencia, IncidenciaCreate, IncidenciaUpdate, EstadoIncidencia } from '@/lib/incidenciasApi';
-import { equipoApi, UsuarioOut } from '@/lib/equipoApi';
+import { equipoApi, MiembroEquipoOut } from '@/lib/equipoApi';
 
 interface FormIncidenciaInlineProps {
   obraId: number;
   visitaId?: number;
-  incidenciaSeleccionada?: Incidencia;
+  incidenciaSeleccionada?: Incidencia | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -17,13 +17,17 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
   const [titulo, setTitulo] = useState(incidenciaSeleccionada?.titulo || '');
   const [descripcion, setDescripcion] = useState(incidenciaSeleccionada?.descripcion || '');
   const [observaciones, setObservaciones] = useState(incidenciaSeleccionada?.observaciones || '');
-  const [fechaDeteccion, setFechaDeteccion] = useState(incidenciaSeleccionada?.fecha_deteccion || new Date().toISOString().split('T')[0]);
+  const [fechaDeteccion, setFechaDeteccion] = useState(
+    incidenciaSeleccionada?.fecha_deteccion 
+      ? new Date(incidenciaSeleccionada.fecha_deteccion).toISOString().split('T')[0] 
+      : new Date().toISOString().split('T')[0]
+  );
   const [fechaLimite, setFechaLimite] = useState(incidenciaSeleccionada?.fecha_limite || '');
   const [responsableId, setResponsableId] = useState<number | ''>(incidenciaSeleccionada?.responsable_id || '');
   const [estado, setEstado] = useState<EstadoIncidencia>(incidenciaSeleccionada?.estado || EstadoIncidencia.NUEVA);
   const [archivos, setArchivos] = useState<File[]>([]);
   
-  const [miembros, setMiembros] = useState<UsuarioOut[]>([]);
+  const [miembros, setMiembros] = useState<MiembroEquipoOut[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMiembros, setLoadingMiembros] = useState(true);
   
@@ -42,8 +46,8 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
   useEffect(() => {
     const fetchMiembros = async () => {
       try {
-        const data = await equipoApi.listar();
-        setMiembros(data);
+        const resumen = await equipoApi.obtenerResumen();
+        setMiembros(resumen.miembros.filter(m => m.is_active));
       } catch (error) {
         console.error("Error cargando equipo", error);
       } finally {
@@ -223,7 +227,7 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
         </div>
 
         <div className="flex justify-end space-x-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={loading} className="!py-1.5 !px-3 text-xs">
+          <Button type="button" variant="outlined" onClick={onClose} disabled={loading} className="!py-1.5 !px-3 text-xs">
             Cancelar
           </Button>
           <Button type="submit" disabled={loading} className="!py-1.5 !px-3 text-xs">

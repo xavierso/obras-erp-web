@@ -5,12 +5,14 @@ const estadoLabels = {
   [EstadoTarea.PENDIENTE]: 'Pendiente',
   [EstadoTarea.EN_PROGRESO]: 'En Progreso',
   [EstadoTarea.COMPLETADA]: 'Completada',
+  [EstadoTarea.VENCIDA]: 'Vencida',
 };
 
 const estadoColors = {
   [EstadoTarea.PENDIENTE]: 'text-text-muted',
   [EstadoTarea.EN_PROGRESO]: 'text-brand-blue',
   [EstadoTarea.COMPLETADA]: 'text-success',
+  [EstadoTarea.VENCIDA]: 'text-error',
 };
 
 interface HistorialTareaProps {

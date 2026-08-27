@@ -82,6 +82,19 @@ export default function ObraDetailPage() {
     }
   };
 
+  const handleEliminarObra = async () => {
+    if (!obra) return;
+    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente la obra "${obra.nombre}"?\nSe borrarán todas sus visitas, tareas e incidencias.`)) return;
+    
+    try {
+      await obrasApi.eliminar(obraId);
+      router.push('/obras');
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message || 'Error al eliminar la obra');
+    }
+  };
+
   if (loading) return <div className="text-center py-10 text-text-muted">Cargando...</div>;
   if (error || !obra) return <div className="text-error">{error || 'Obra no encontrada'}</div>;
 
@@ -95,7 +108,14 @@ export default function ObraDetailPage() {
             </svg>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text-main">{obra.nombre}</h1>
+            <h1 className="text-2xl font-bold text-text-main flex items-center space-x-3">
+              <span>{obra.nombre}</span>
+              {isUserAdmin(user) && (
+                <button onClick={handleEliminarObra} className="text-red-400 hover:text-red-500 transition-colors p-1" title="Eliminar Obra">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              )}
+            </h1>
             <p className="text-text-muted text-sm font-mono">{obra.codigo}</p>
           </div>
         </div>

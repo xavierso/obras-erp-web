@@ -70,5 +70,13 @@ export const documentosApi = {
     } catch (error) {
       throw ApiException.fromAxiosError(error);
     }
+  },
+
+  eliminar: async (documentoId: number): Promise<void> => {
+    try {
+      await apiClient.delete(`/documentos/${documentoId}`);
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
   }
 };

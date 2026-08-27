@@ -5,6 +5,7 @@ import { visitasApi } from '@/lib/visitasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 
 export default function NuevaVisitaPage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function NuevaVisitaPage() {
     
     try {
       await visitasApi.crear(obraId, descripcion, archivos);
+      toast.success('Visita registrada correctamente');
       router.push(`/obras/${obraId}`);
     } catch (err) {
       const error = err as Error;
@@ -80,21 +82,32 @@ export default function NuevaVisitaPage() {
               Evidencia (Fotos / Videos)
             </label>
             
-            {/* Contenedor estilo Dropzone que abre la cámara en móviles */}
-            <div className="relative w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-text-muted bg-white/5 hover:bg-white/10 hover:border-accent transition-all group overflow-hidden">
+            {/* Contenedor estilo botón para móviles y Dropzone para escritorio */}
+            <div className="relative w-full overflow-hidden">
               <input 
                 type="file" 
                 multiple
                 accept="image/*,video/*"
+                capture="environment"
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <svg className="w-10 h-10 mb-2 text-brand-blue group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <p className="text-sm font-medium">Toca para abrir la cámara o galería</p>
-              <p className="text-xs opacity-70 mt-1">{archivos.length} archivos seleccionados</p>
+              <div className="flex flex-col items-center justify-center w-full py-8 border border-white/20 rounded-xl bg-white/5 hover:bg-white/10 hover:border-brand-blue transition-all group">
+                <div className="w-14 h-14 rounded-full bg-brand-blue/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-text-main text-center">Toca para Tomar Foto o Grabar</p>
+                <p className="text-xs text-text-muted mt-1 text-center">o selecciona desde la galería</p>
+                
+                {archivos.length > 0 && (
+                  <div className="mt-4 px-4 py-1.5 bg-brand-blue/20 text-brand-blue rounded-full text-xs font-bold">
+                    {archivos.length} archivo(s) seleccionado(s)
+                  </div>
+                )}
+              </div>
             </div>
             
             {archivos.length > 0 && (

@@ -72,16 +72,15 @@ export default function IncidenciasGlobalPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-text-main">Incidencias Globales</h1>
-        <Button variant="outlined" fullWidth={false} onClick={cargarDatos} className="!py-1.5 px-3 text-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-main">Incidencias Globales</h1>
+          <p className="text-text-muted text-sm mt-1">Aquí puedes ver todas las incidencias de todas las obras.</p>
+        </div>
+        <Button variant="outlined" onClick={cargarDatos} fullWidth={false} className="px-6">
           Actualizar
         </Button>
       </div>
-
-      <p className="text-text-muted">
-        Aquí puedes ver todas las incidencias de todas las obras.
-      </p>
 
       {incidencias.length === 0 ? (
         <GlassCard className="text-center py-12">

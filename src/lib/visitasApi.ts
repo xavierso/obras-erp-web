@@ -95,5 +95,13 @@ export const visitasApi = {
     } catch (error) {
       throw ApiException.fromAxiosError(error);
     }
+  },
+
+  eliminar: async (obraId: number, visitaId: number): Promise<void> => {
+    try {
+      await apiClient.delete(`/obras/${obraId}/visitas/${visitaId}`);
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
   }
 };

@@ -30,13 +30,22 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-2: var(--bg-deep);
+  
   --color-accent: var(--accent);
   --color-accent-muted: var(--accent-muted);
+  
   --color-brand-blue: var(--brand-blue);
+  --color-brand-navy: var(--bg-deep);
+  
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
   
-  --font-sans: var(--font-sora), sans-serif;
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--accent);
+  
+  --font-sans: var(--font-space), sans-serif;
 }
 
 body {
@@ -46,19 +55,34 @@ body {
   min-height: 100vh;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Minimalista y oscura */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Utilidad Glass */
+.glass-panel {
+  background: rgba(3, 44, 79, 0.55); /* Original surface con opacidad */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.glass-panel-interactive:hover {
+  background: rgba(3, 44, 79, 0.75);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(15, 66, 126, 0.3);
 }

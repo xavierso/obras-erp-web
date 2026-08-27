@@ -74,5 +74,13 @@ export const obrasApi = {
     } catch (error) {
       throw ApiException.fromAxiosError(error);
     }
+  },
+
+  eliminar: async (obraId: number): Promise<void> => {
+    try {
+      await apiClient.delete(`/obras/${obraId}`);
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
   }
 };

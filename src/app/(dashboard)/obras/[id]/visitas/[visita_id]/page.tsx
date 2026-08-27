@@ -78,6 +78,16 @@ export default function VisitaDetallePage() {
     }
   };
 
+  const handleEliminarVisita = async () => {
+    if (!confirm('¿Estás seguro de que deseas eliminar permanentemente esta visita?\nSe perderán todas sus fotos y observaciones.')) return;
+    try {
+      await visitasApi.eliminar(obraId, visitaId);
+      router.push(`/obras/${obraId}`);
+    } catch (err: any) {
+      setError(err.message || 'Error al eliminar la visita');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-text-muted">Cargando visita...</div>;
   }
@@ -88,7 +98,7 @@ export default function VisitaDetallePage() {
         No se encontró la visita o hubo un error.
         <div className="mt-4">
           <Link href={`/obras/${obraId}`}>
-            <Button variant="outlined">Volver a la Obra</Button>
+            <Button fullWidth={false} variant="outlined">Volver a la Obra</Button>
           </Link>
         </div>
       </div>
@@ -98,18 +108,23 @@ export default function VisitaDetallePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center space-x-4 mb-4">
-        <Button variant="outlined" className="!px-3 !py-2" onClick={() => router.back()}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={() => router.back()} className="text-text-muted hover:text-accent transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-text-main">
-            {isEditing ? 'Editar Visita' : 'Detalles de la Visita'}
-          </h1>
-          <p className="text-text-muted text-sm">
-            {new Date(visita.fecha).toLocaleString()}
-          </p>
+        </button>
+        <div className="flex-1 flex items-center space-x-3">
+          <div>
+            <h1 className="text-2xl font-bold text-text-main">
+              {isEditing ? 'Editar Visita' : 'Detalles de la Visita'}
+            </h1>
+            <p className="text-text-muted text-sm">
+              {new Date(visita.fecha).toLocaleString()}
+            </p>
+          </div>
+          <button onClick={handleEliminarVisita} className="text-red-400 hover:text-red-500 transition-colors p-1 self-start mt-1" title="Eliminar Visita">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          </button>
         </div>
         <div>
           <Button 
@@ -146,7 +161,7 @@ export default function VisitaDetallePage() {
             <div className="flex justify-between items-center mb-1">
               <label className="block text-text-muted text-sm font-semibold ml-1">Observaciones</label>
               {!isEditing && (
-                <Button type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => setIsEditing(true)}>
+                <Button fullWidth={false} type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => setIsEditing(true)}>
                   Editar
                 </Button>
               )}
@@ -179,7 +194,7 @@ export default function VisitaDetallePage() {
                     onChange={handleFileChange} 
                     accept="image/*,video/*"
                   />
-                  <Button type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => fileInputRef.current?.click()}>
+                  <Button fullWidth={false} type="button" variant="outlined" className="!py-1.5 !px-3 text-xs" onClick={() => fileInputRef.current?.click()}>
                     Agregar Archivos
                   </Button>
                 </div>

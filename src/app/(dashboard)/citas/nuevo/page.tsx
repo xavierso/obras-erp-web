@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 
 import { Suspense } from 'react';
 
@@ -64,6 +65,13 @@ function NuevaCitaForm() {
       return;
     }
 
+    // Validación de fecha en el pasado
+    const selectedDate = new Date(fechaHora);
+    if (selectedDate < new Date()) {
+      setError('No puedes programar citas en el pasado');
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -74,6 +82,7 @@ function NuevaCitaForm() {
         notas: notas || null,
         recordatorio_minutos_antes: recordatorio === 'none' ? null : parseInt(recordatorio, 10)
       });
+      toast.success('Cita programada correctamente');
       router.push('/citas');
     } catch (err) {
       const error = err as Error;

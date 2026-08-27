@@ -8,6 +8,20 @@ import { calendarioApi, EventoCalendarioOut } from '@/lib/calendarioApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { 
+  Briefcase, 
+  MapPin, 
+  CalendarDays, 
+  FileText, 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle, 
+  User, 
+  ArrowRight,
+  TrendingUp,
+  Activity,
+  CheckSquare
+} from 'lucide-react';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -30,7 +44,6 @@ export default function HomePage() {
         setResumen(dashboardData);
         setObrasRecientes(obrasData.slice(0, 3));
         
-        // Take up to 5 upcoming events, filtering out completed visits
         const upcoming = eventosData
           .filter(e => e.estado !== 'completada' && e.estado !== 'completado')
           .slice(0, 5);
@@ -49,87 +62,172 @@ export default function HomePage() {
 
   const getEstadoColor = (estado: EstadoObra) => {
     switch (estado) {
-      case EstadoObra.enEjecucion: return 'text-accent bg-accent/10 border-accent/20';
+      case EstadoObra.enEjecucion: return 'text-brand-blue bg-brand-blue/10 border-brand-blue/20';
       case EstadoObra.finalizada:
       case EstadoObra.entregada: return 'text-success bg-success/10 border-success/20';
       case EstadoObra.enPausa:
-      case EstadoObra.archivada: return 'text-accent-muted bg-accent-muted/10 border-accent-muted/20';
+      case EstadoObra.archivada: return 'text-text-muted bg-white/5 border-white/10';
       default: return 'text-text-muted bg-white/5 border-white/10';
     }
   };
 
-  if (loading) return <div className="text-center py-10 text-text-muted">Cargando inicio...</div>;
-  if (error) return <div className="text-error p-4">{error}</div>;
+  if (loading) return (
+    <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
+      <div className="w-8 h-8 rounded-full border-2 border-brand-blue border-t-transparent animate-spin"></div>
+      <p className="text-text-muted font-medium tracking-wide">Iniciando entorno...</p>
+    </div>
+  );
+  if (error) return <div className="p-4 bg-error/10 border border-error/20 text-error rounded-xl">{error}</div>;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-text-main">Hola, {user?.nombre || 'Inspector'}</h1>
-        <p className="text-text-muted text-sm">Este es el resumen de tu empresa hoy</p>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20 md:pb-0">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
+        <div>
+          <p className="text-sm font-semibold text-brand-blue mb-1 tracking-wider uppercase">Panel de Control</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-text-main tracking-tight">
+            Buenos días, {user?.nombre || 'Inspector'}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-text-muted bg-surface/50 px-4 py-2 rounded-full border border-white/5">
+          <Activity className="w-4 h-4 text-success" />
+          <span>Sistema en línea</span>
+        </div>
       </div>
 
-      {resumen && (
+      {/* EMPTY STATE PARA NUEVAS CUENTAS */}
+      {obrasRecientes.length === 0 && resumen && resumen.obras_activas === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-brand-blue/30 rounded-2xl bg-brand-blue/5">
+          <div className="w-24 h-24 bg-brand-blue/20 rounded-full flex items-center justify-center mb-6">
+            <Briefcase className="w-12 h-12 text-brand-blue" />
+          </div>
+          <h2 className="text-2xl font-bold text-text-main mb-3">¡Bienvenido a DIAM!</h2>
+          <p className="text-text-muted mb-8 max-w-md text-base">
+            Tu panel de control está listo. Para empezar a visualizar métricas y organizar el trabajo, crea tu primera obra.
+          </p>
+          <Link href="/obras/nuevo">
+            <button className="px-8 py-3 bg-brand-blue hover:bg-brand-blue-light text-white font-bold rounded-full transition-all shadow-[0_0_20px_rgba(0,80,158,0.4)]">
+              Crear mi primera obra
+            </button>
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* STATS ROW */}
+          {resumen && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <GlassCard padding="p-4" className="text-center">
-            <p className="text-3xl font-bold text-text-main mb-1">{resumen.obras_activas}</p>
-            <p className="text-xs text-text-muted">Obras Activas</p>
+          <GlassCard padding="p-5" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Briefcase className="w-16 h-16 text-brand-blue" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-text-muted mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-blue"></span> Obras Activas
+              </p>
+              <p className="text-4xl font-bold text-text-main">{resumen.obras_activas}</p>
+            </div>
           </GlassCard>
-          <GlassCard padding="p-4" className="text-center">
-            <p className="text-3xl font-bold text-brand-blue mb-1">{resumen.visitas_hoy}</p>
-            <p className="text-xs text-text-muted">Visitas Hoy</p>
+
+          <GlassCard padding="p-5" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <MapPin className="w-16 h-16 text-brand-blue-light" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-text-muted mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-blue-light"></span> Visitas Hoy
+              </p>
+              <p className="text-4xl font-bold text-text-main">{resumen.visitas_hoy}</p>
+            </div>
           </GlassCard>
-          <GlassCard padding="p-4" className="text-center">
-            <p className="text-3xl font-bold text-accent mb-1">{resumen.visitas_semana}</p>
-            <p className="text-xs text-text-muted">Visitas Semana</p>
+
+          <GlassCard padding="p-5" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <CalendarDays className="w-16 h-16 text-warning" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-text-muted mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-warning"></span> Visitas Semana
+              </p>
+              <p className="text-4xl font-bold text-text-main">{resumen.visitas_semana}</p>
+            </div>
           </GlassCard>
-          <GlassCard padding="p-4" className="text-center">
-            <p className="text-3xl font-bold text-success mb-1">{resumen.documentos_nuevos_semana}</p>
-            <p className="text-xs text-text-muted">Docs (7 días)</p>
+
+          <GlassCard padding="p-5" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <FileText className="w-16 h-16 text-success" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-sm font-medium text-text-muted mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-success"></span> Docs (7 días)
+              </p>
+              <p className="text-4xl font-bold text-text-main">{resumen.documentos_nuevos_semana}</p>
+            </div>
           </GlassCard>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-text-main">Próximos Eventos</h2>
-            <Link href="/calendario" className="text-sm text-accent hover:underline">Ver Calendario →</Link>
+      {/* TWO COLUMNS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+        
+        {/* EVENTS LIST */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-end mb-2 px-1">
+            <h2 className="text-lg font-semibold text-text-main flex items-center gap-2">
+              <Clock className="w-5 h-5 text-brand-blue" />
+              Próximos Eventos
+            </h2>
+            <Link href="/calendario" className="text-xs font-semibold text-text-muted hover:text-brand-blue transition-colors flex items-center gap-1">
+              Ver calendario <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
           
           {eventosPendientes.length === 0 ? (
-            <GlassCard className="text-center py-8">
+            <GlassCard className="text-center py-10">
+              <CalendarDays className="w-10 h-10 text-text-muted/30 mx-auto mb-3" />
               <p className="text-text-muted text-sm">No hay eventos próximos.</p>
             </GlassCard>
           ) : (
             <div className="space-y-3">
               {eventosPendientes.map(evento => {
                 const colorMap: Record<string, string> = {
-                  visita: 'bg-brand-blue text-white',
-                  tarea: 'bg-yellow-500 text-black',
-                  incidencia: 'bg-error text-white',
-                  hito: 'bg-purple-500 text-white',
-                  reunion: 'bg-gray-200 text-gray-800',
-                  entrega: 'bg-green-500 text-white'
+                  visita: 'text-brand-blue bg-brand-blue/10',
+                  tarea: 'text-warning bg-warning/10',
+                  incidencia: 'text-error bg-error/10',
+                  hito: 'text-purple-400 bg-purple-400/10',
+                  reunion: 'text-text-main bg-white/10',
+                  entrega: 'text-success bg-success/10'
                 };
-                const dotColor = colorMap[evento.tipo] || 'bg-white/40 text-white';
+                const dotColor = colorMap[evento.tipo] || 'text-text-muted bg-white/5';
 
                 return (
-                  <Link key={evento.id} href={`/calendario`} className="block p-4 bg-white/5 border border-white/10 rounded-xl hover:border-accent transition-colors">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-semibold text-text-main text-sm flex items-center pr-2 line-clamp-1">
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase font-bold mr-2 ${dotColor}`}>
-                          {evento.tipo}
-                        </span>
-                        {evento.titulo}
-                      </span>
-                      <span className="text-xs font-semibold text-accent whitespace-nowrap bg-accent/10 px-2 py-1 rounded-md">
-                        {new Date(evento.fecha).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="text-xs text-text-muted mt-2 flex justify-between items-center">
-                      <span className="truncate">{evento.obra_nombre || 'General'}</span>
-                      {evento.hora_inicio && <span>{evento.hora_inicio.slice(0, 5)}</span>}
-                    </div>
+                  <Link key={evento.id} href={`/calendario`} className="block">
+                    <GlassCard interactive padding="p-4" className="flex items-center gap-4 group">
+                      <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center ${dotColor}`}>
+                        <span className="text-[10px] font-bold uppercase leading-none mb-1 opacity-80">{new Date(evento.fecha).toLocaleDateString('es', { month: 'short' })}</span>
+                        <span className="text-lg font-bold leading-none">{new Date(evento.fecha).getDate()}</span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${dotColor}`}>
+                            {evento.tipo}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-semibold text-text-main truncate group-hover:text-brand-blue transition-colors">
+                          {evento.titulo}
+                        </h3>
+                        <p className="text-xs text-text-muted truncate mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {evento.obra_nombre || 'General'}
+                        </p>
+                      </div>
+                      
+                      {evento.hora_inicio && (
+                        <div className="text-xs font-semibold text-text-main bg-surface-2 px-2.5 py-1.5 rounded-lg border border-white/5">
+                          {evento.hora_inicio.slice(0, 5)}
+                        </div>
+                      )}
+                    </GlassCard>
                   </Link>
                 );
               })}
@@ -137,32 +235,44 @@ export default function HomePage() {
           )}
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-text-main">Obras Recientes</h2>
-            <Link href="/obras" className="text-sm text-accent hover:underline">Ver todas</Link>
+        {/* PROJECTS LIST */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-end mb-2 px-1">
+            <h2 className="text-lg font-semibold text-text-main flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-brand-blue" />
+              Obras Recientes
+            </h2>
+            <Link href="/obras" className="text-xs font-semibold text-text-muted hover:text-brand-blue transition-colors flex items-center gap-1">
+              Ver todas <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
           
           {obrasRecientes.length === 0 ? (
-            <GlassCard className="text-center py-8">
+            <GlassCard className="text-center py-10">
+              <Briefcase className="w-10 h-10 text-text-muted/30 mx-auto mb-3" />
               <p className="text-text-muted text-sm">No hay obras registradas aún.</p>
             </GlassCard>
           ) : (
             <div className="space-y-3">
               {obrasRecientes.map((obra) => (
                 <Link key={obra.id} href={`/obras/${obra.id}`} className="block">
-                  <GlassCard padding="p-4" className="hover:bg-surface/70 transition-colors h-full flex flex-col cursor-pointer group">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="flex items-center text-xs font-mono text-text-muted bg-white/10 px-2.5 py-1 rounded-md">
-                        {obra.codigo}
-                      </span>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getEstadoColor(obra.estado)}`}>
-                        {estadoObraLabels[obra.estado]}
-                      </span>
+                  <GlassCard interactive padding="p-4" className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-surface-2 to-surface border border-white/5 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-text-muted group-hover:text-brand-blue transition-colors" />
                     </div>
-                    <h3 className="font-bold text-sm text-text-main group-hover:text-accent transition-colors truncate">
-                      {obra.nombre}
-                    </h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs font-mono text-text-muted">
+                          {obra.codigo}
+                        </span>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getEstadoColor(obra.estado)}`}>
+                          {estadoObraLabels[obra.estado]}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-text-main group-hover:text-brand-blue transition-colors truncate">
+                        {obra.nombre}
+                      </h3>
+                    </div>
                   </GlassCard>
                 </Link>
               ))}
@@ -171,70 +281,68 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-          <h2 className="text-xl font-bold text-text-main">Tareas Pendientes</h2>
+      {/* TASKS ROW */}
+      <div className="pt-6 border-t border-white/5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h2 className="text-lg font-semibold text-text-main flex items-center gap-2">
+            <CheckSquare className="w-5 h-5 text-brand-blue" />
+            Tareas Pendientes
+          </h2>
           
           {tareasPendientes.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="bg-white/5 border border-white/10 rounded-full px-3 py-1 flex items-center">
-                <span className="text-text-main font-semibold mr-1">{tareasPendientes.length}</span> pendientes
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <div className="glass-panel px-3 py-1.5 rounded-full flex items-center">
+                <span className="text-text-main font-bold mr-1">{tareasPendientes.length}</span> pendientes
               </div>
-              <div className="bg-error/10 border border-error/20 rounded-full px-3 py-1 flex items-center">
-                <span className="text-error font-semibold mr-1">
+              <div className="bg-error/10 border border-error/20 px-3 py-1.5 rounded-full flex items-center">
+                <AlertCircle className="w-3 h-3 text-error mr-1.5" />
+                <span className="text-error font-bold mr-1">
                   {tareasPendientes.filter(t => t.estado === EstadoTarea.VENCIDA).length}
                 </span> vencidas
-              </div>
-              <div className="bg-brand-blue/10 border border-brand-blue/20 rounded-full px-3 py-1 flex items-center">
-                <span className="text-brand-blue font-semibold mr-1">
-                  {tareasPendientes.filter(t => {
-                    if (!t.fecha_limite) return false;
-                    const date = new Date(t.fecha_limite);
-                    const now = new Date();
-                    const endOfWeek = new Date(now);
-                    endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
-                    return date >= now && date <= endOfWeek;
-                  }).length}
-                </span> para esta semana
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-full px-3 py-1 flex items-center">
-                <span className="text-text-muted font-semibold mr-1">
-                  {tareasPendientes.filter(t => !t.fecha_limite).length}
-                </span> sin fecha
               </div>
             </div>
           )}
         </div>
         
         {tareasPendientes.length === 0 ? (
-          <GlassCard className="text-center py-8">
+          <GlassCard className="text-center py-10">
+            <CheckCircle2 className="w-10 h-10 text-success/50 mx-auto mb-3" />
             <p className="text-text-muted text-sm">No hay tareas pendientes.</p>
           </GlassCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tareasPendientes.map(tarea => (
               <Link key={tarea.id} href={`/obras/${tarea.obra_id}`} className="block h-full">
-                <GlassCard padding="p-4" className="hover:bg-surface/70 transition-colors h-full flex flex-col cursor-pointer group">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-semibold text-text-main text-sm line-clamp-2 group-hover:text-accent transition-colors">{tarea.titulo}</span>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                      tarea.estado === EstadoTarea.PENDIENTE ? 'text-text-muted bg-white/5 border-white/10' :
-                      'text-brand-blue bg-brand-blue/10 border-brand-blue/30'
+                <GlassCard interactive padding="p-5" className="h-full flex flex-col group relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 w-1 h-full ${tarea.estado === EstadoTarea.VENCIDA ? 'bg-error' : tarea.estado === EstadoTarea.EN_PROGRESO ? 'bg-brand-blue' : 'bg-warning'}`}></div>
+                  
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="font-semibold text-text-main text-sm line-clamp-2 pr-2 group-hover:text-brand-blue transition-colors">
+                      {tarea.titulo}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap ${
+                      tarea.estado === EstadoTarea.VENCIDA ? 'bg-error/20 text-error' :
+                      tarea.estado === EstadoTarea.PENDIENTE ? 'bg-warning/20 text-warning' :
+                      'bg-brand-blue/20 text-brand-blue'
                     }`}>
-                      {tarea.estado === EstadoTarea.PENDIENTE ? 'Pendiente' : 'En Progreso'}
+                      {tarea.estado === EstadoTarea.PENDIENTE ? 'Pendiente' : 
+                       tarea.estado === EstadoTarea.VENCIDA ? 'Vencida' : 'En Progreso'}
                     </span>
                   </div>
+                  
                   {tarea.descripcion && (
-                    <p className="text-xs text-text-muted line-clamp-1 mb-2">{tarea.descripcion}</p>
+                    <p className="text-xs text-text-muted line-clamp-2 mb-4 leading-relaxed">{tarea.descripcion}</p>
                   )}
-                  <div className="text-xs text-text-muted mt-auto pt-2 flex justify-between items-center">
-                    <span className="truncate pr-2 flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  
+                  <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center text-xs">
+                    <span className="flex items-center text-text-muted truncate pr-2">
+                      <User className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                       {tarea.responsable?.nombre || 'Sin asignar'}
                     </span>
                     {tarea.fecha_limite && (
-                      <span className="whitespace-nowrap text-error/80">
-                        Vence: {new Date(tarea.fecha_limite).toLocaleDateString()}
+                      <span className={`flex items-center font-medium ${tarea.estado === EstadoTarea.VENCIDA ? 'text-error' : 'text-text-main'}`}>
+                        <Clock className="w-3.5 h-3.5 mr-1.5 opacity-70" />
+                        {new Date(tarea.fecha_limite).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
                       </span>
                     )}
                   </div>
@@ -244,6 +352,8 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { visitasApi, Visita } from '@/lib/visitasApi';
 import { citasApi, CitaVisita } from '@/lib/citasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import Link from 'next/link';
 
 import { tareasApi, Tarea } from '@/lib/tareasApi';
@@ -99,7 +100,19 @@ export default function ObraDetailPage() {
           </div>
         </div>
         
-        <div>
+        <div className="flex gap-2">
+          <Link href={`/obras/${obraId}/calendario`}>
+            <Button 
+              variant="outlined"
+              fullWidth={false}
+              className="!min-h-[40px] px-5 py-2 flex items-center space-x-2 text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Calendario</span>
+            </Button>
+          </Link>
           <Button 
             fullWidth={false}
             onClick={() => setModalInformeOpen(true)} 
@@ -193,7 +206,7 @@ export default function ObraDetailPage() {
         </div>
 
         {/* ROW 2: Estado Actual (Izquierda) + Tareas (Derecha) */}
-        <div className="lg:col-span-1 h-full">
+        <div className="lg:col-span-1 h-full relative z-20">
           <GlassCard padding="p-5" className="h-full">
             <h3 className="font-semibold text-text-main mb-4">Estado Actual</h3>
             <div className="mb-4">
@@ -205,23 +218,16 @@ export default function ObraDetailPage() {
             <div className="space-y-2 mt-6">
               <p className="text-xs text-text-muted mb-2">Cambiar estado a:</p>
               <div className="relative">
-                <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-text-main focus:outline-none focus:border-accent disabled:opacity-50 appearance-none cursor-pointer [color-scheme:dark]"
+                <Dropdown
                   value={obra.estado}
                   disabled={cambiandoEstado || (!isUserAdmin(user) && !isUserDirector(user))}
-                  onChange={(e) => handleCambiarEstado(e.target.value as EstadoObra)}
-                >
-                  {Object.entries(estadoObraLabels).map(([val, label]) => (
-                    <option key={val} value={val} className="bg-surface text-text-main">
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-muted">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  onChange={(val) => handleCambiarEstado(val as EstadoObra)}
+                  fullWidth
+                  options={Object.entries(estadoObraLabels).map(([val, label]) => ({
+                    value: val,
+                    label: label
+                  }))}
+                />
               </div>
             </div>
           </GlassCard>

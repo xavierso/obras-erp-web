@@ -4,6 +4,7 @@ import { dashboardApi, ResumenDashboard } from '@/lib/dashboardApi';
 import { obrasApi, Obra, estadoObraLabels, EstadoObra } from '@/lib/obrasApi';
 import { citasApi, CitaVisita } from '@/lib/citasApi';
 import { tareasApi, Tarea, EstadoTarea } from '@/lib/tareasApi';
+import { calendarioApi, EventoCalendarioOut } from '@/lib/calendarioApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -12,7 +13,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const [resumen, setResumen] = useState<ResumenDashboard | null>(null);
   const [obrasRecientes, setObrasRecientes] = useState<Obra[]>([]);
-  const [citasPendientes, setCitasPendientes] = useState<CitaVisita[]>([]);
+  const [eventosPendientes, setEventosPendientes] = useState<EventoCalendarioOut[]>([]);
   const [tareasPendientes, setTareasPendientes] = useState<Tarea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,15 +21,21 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [dashboardData, obrasData, citasData, tareasData] = await Promise.all([
+        const [dashboardData, obrasData, eventosData, tareasData] = await Promise.all([
           dashboardApi.obtenerResumen(),
           obrasApi.listar(),
-          citasApi.listar({ estado: 'pendiente' as any }),
+          calendarioApi.listar({ fecha_inicio: new Date().toISOString().split('T')[0] }),
           tareasApi.listar({ limit: 5 })
         ]);
         setResumen(dashboardData);
         setObrasRecientes(obrasData.slice(0, 3));
-        setCitasPendientes(citasData.slice(0, 5)); // Show up to 5 upcoming appointments
+        
+        // Take up to 5 upcoming events, filtering out completed visits
+        const upcoming = eventosData
+          .filter(e => e.estado !== 'completada' && e.estado !== 'completado')
+          .slice(0, 5);
+          
+        setEventosPendientes(upcoming);
         setTareasPendientes(tareasData.filter(t => t.estado !== EstadoTarea.COMPLETADA).slice(0, 5));
       } catch (err) {
         const error = err as Error;
@@ -85,37 +92,47 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-text-main">Próximas Citas</h2>
-            <Link href="/citas" className="text-sm text-accent hover:underline">Ver todas</Link>
+            <h2 className="text-xl font-bold text-text-main">Próximos Eventos</h2>
+            <Link href="/calendario" className="text-sm text-accent hover:underline">Ver Calendario →</Link>
           </div>
           
-          {citasPendientes.length === 0 ? (
+          {eventosPendientes.length === 0 ? (
             <GlassCard className="text-center py-8">
-              <p className="text-text-muted text-sm">No hay citas pendientes.</p>
+              <p className="text-text-muted text-sm">No hay eventos próximos.</p>
             </GlassCard>
           ) : (
             <div className="space-y-3">
-              {citasPendientes.map(cita => (
-                <Link key={cita.id} href={`/citas/${cita.id}`} className="block p-4 bg-white/5 border border-white/10 rounded-xl hover:border-accent transition-colors">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="font-semibold text-text-main text-sm truncate pr-2">
-                      {cita.nombre_referencia || `Obra #${cita.obra_id}`}
-                    </span>
-                    <span className="text-xs font-semibold text-accent whitespace-nowrap bg-accent/10 px-2 py-1 rounded-md">
-                      {new Date(cita.fecha_hora).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="text-xs text-text-muted flex justify-between items-center">
-                    <span>{new Date(cita.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    {cita.recordatorio_minutos_antes !== null && (
-                      <span className="flex items-center">
-                        <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        {cita.recordatorio_minutos_antes}m
+              {eventosPendientes.map(evento => {
+                const colorMap: Record<string, string> = {
+                  visita: 'bg-brand-blue text-white',
+                  tarea: 'bg-yellow-500 text-black',
+                  incidencia: 'bg-error text-white',
+                  hito: 'bg-purple-500 text-white',
+                  reunion: 'bg-gray-200 text-gray-800',
+                  entrega: 'bg-green-500 text-white'
+                };
+                const dotColor = colorMap[evento.tipo] || 'bg-white/40 text-white';
+
+                return (
+                  <Link key={evento.id} href={`/calendario`} className="block p-4 bg-white/5 border border-white/10 rounded-xl hover:border-accent transition-colors">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-semibold text-text-main text-sm flex items-center pr-2 line-clamp-1">
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase font-bold mr-2 ${dotColor}`}>
+                          {evento.tipo}
+                        </span>
+                        {evento.titulo}
                       </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                      <span className="text-xs font-semibold text-accent whitespace-nowrap bg-accent/10 px-2 py-1 rounded-md">
+                        {new Date(evento.fecha).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="text-xs text-text-muted mt-2 flex justify-between items-center">
+                      <span className="truncate">{evento.obra_nombre || 'General'}</span>
+                      {evento.hora_inicio && <span>{evento.hora_inicio.slice(0, 5)}</span>}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

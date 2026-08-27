@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { useAuth } from '@/context/AuthContext';
 import { incidenciasApi, Incidencia, IncidenciaCreate, IncidenciaUpdate, EstadoIncidencia } from '@/lib/incidenciasApi';
 import { equipoApi, MiembroEquipoOut } from '@/lib/equipoApi';
@@ -146,45 +147,36 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Responsable</label>
-            <div className="relative">
-              <select 
-                value={responsableId} 
-                onChange={e => setResponsableId(e.target.value === '' ? '' : Number(e.target.value))}
+            <div className="relative z-30">
+              <Dropdown
+                value={responsableId.toString()}
+                onChange={(val) => setResponsableId(val === '' ? '' : Number(val))}
                 disabled={loadingMiembros}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-bg-deep">Sin asignar</option>
-                {miembros.map(m => (
-                  <option key={m.id} value={m.id} className="bg-bg-deep">{m.nombre}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                placeholder="Sin asignar"
+                fullWidth
+                options={[
+                  { value: '', label: 'Sin asignar' },
+                  ...miembros.map(m => ({ value: m.id.toString(), label: m.nombre }))
+                ]}
+              />
             </div>
           </div>
           
           {incidenciaSeleccionada && (
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Estado</label>
-              <div className="relative">
-                <select 
-                  value={estado} 
-                  onChange={e => setEstado(e.target.value as EstadoIncidencia)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer"
-                >
-                  <option value={EstadoIncidencia.NUEVA} className="bg-bg-deep text-brand-blue">Nueva</option>
-                  <option value={EstadoIncidencia.EN_PROCESO} className="bg-bg-deep text-warning">En Proceso</option>
-                  <option value={EstadoIncidencia.RESUELTA} className="bg-bg-deep text-success">Resuelta</option>
-                  <option value={EstadoIncidencia.CERRADA} className="bg-bg-deep text-text-muted">Cerrada</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+              <div className="relative z-20">
+                <Dropdown
+                  value={estado}
+                  onChange={(val) => setEstado(val as EstadoIncidencia)}
+                  fullWidth
+                  options={[
+                    { value: EstadoIncidencia.NUEVA, label: 'Nueva' },
+                    { value: EstadoIncidencia.EN_PROCESO, label: 'En Proceso' },
+                    { value: EstadoIncidencia.RESUELTA, label: 'Resuelta' },
+                    { value: EstadoIncidencia.CERRADA, label: 'Cerrada' }
+                  ]}
+                />
               </div>
             </div>
           )}

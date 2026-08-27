@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { Tarea, TareaCreate, TareaUpdate, EstadoTarea, tareasApi } from '@/lib/tareasApi';
 import { equipoApi, MiembroEquipoOut } from '@/lib/equipoApi';
 
@@ -125,23 +126,18 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Responsable</label>
-            <div className="relative">
-              <select 
-                value={responsableId} 
-                onChange={e => setResponsableId(e.target.value === '' ? '' : Number(e.target.value))}
+            <div className="relative z-30">
+              <Dropdown
+                value={responsableId.toString()}
+                onChange={(val) => setResponsableId(val === '' ? '' : Number(val))}
                 disabled={loadingMiembros}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-bg-deep">Sin asignar</option>
-                {miembros.map(m => (
-                  <option key={m.id} value={m.id} className="bg-bg-deep">{m.nombre}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                placeholder="Sin asignar"
+                fullWidth
+                options={[
+                  { value: '', label: 'Sin asignar' },
+                  ...miembros.map(m => ({ value: m.id.toString(), label: m.nombre }))
+                ]}
+              />
             </div>
           </div>
           
@@ -159,22 +155,18 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
         {tareaSeleccionada && (
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Estado</label>
-            <div className="relative">
-              <select 
-                value={estado} 
-                onChange={e => setEstado(e.target.value as EstadoTarea)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer"
-              >
-                <option value={EstadoTarea.PENDIENTE} className="bg-bg-deep text-text-main">Pendiente</option>
-                <option value={EstadoTarea.EN_PROGRESO} className="bg-bg-deep text-brand-blue">En Progreso</option>
-                <option value={EstadoTarea.COMPLETADA} className="bg-bg-deep text-success">Completada</option>
-                <option value={EstadoTarea.VENCIDA} className="bg-bg-deep text-error">Vencida</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+            <div className="relative z-20">
+              <Dropdown
+                value={estado}
+                onChange={(val) => setEstado(val as EstadoTarea)}
+                fullWidth
+                options={[
+                  { value: EstadoTarea.PENDIENTE, label: 'Pendiente' },
+                  { value: EstadoTarea.EN_PROGRESO, label: 'En Progreso' },
+                  { value: EstadoTarea.COMPLETADA, label: 'Completada' },
+                  { value: EstadoTarea.VENCIDA, label: 'Vencida' }
+                ]}
+              />
             </div>
           </div>
         )}

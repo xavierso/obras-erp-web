@@ -12,7 +12,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl transition-colors min-h-[52px] text-[15.5px] disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center px-6 font-semibold rounded-xl transition-colors min-h-[52px] text-[15.5px] disabled:opacity-50 disabled:cursor-not-allowed';
   const widthStyles = fullWidth ? 'w-full' : '';
   
   const variantStyles = {

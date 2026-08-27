@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { informesApi } from "@/lib/informesApi";
 
 interface ModalInformeObraProps {
@@ -77,30 +78,18 @@ export function ModalInformeObra({
               <label className="block text-sm text-text-muted mb-2">
                 Tipo de informe
               </label>
-              <div className="relative">
-                <select
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 pr-10 text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
+              <div className="relative z-20">
+                <Dropdown
                   value={tipo}
-                  onChange={(e) => setTipo(e.target.value as any)}
-                >
-                  <option value="completo" className="bg-surface text-text-main">
-                    Completo (Todas las visitas)
-                  </option>
-                  <option value="semanal" className="bg-surface text-text-main">
-                    Semanal (Últimos 7 días)
-                  </option>
-                  <option value="mensual" className="bg-surface text-text-main">
-                    Mensual (Últimos 30 días)
-                  </option>
-                  <option value="personalizado" className="bg-surface text-text-main">
-                    Rango de fechas
-                  </option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-muted">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  onChange={(val) => setTipo(val as any)}
+                  fullWidth
+                  options={[
+                    { value: "completo", label: "Completo (Todas las visitas)" },
+                    { value: "semanal", label: "Semanal (Últimos 7 días)" },
+                    { value: "mensual", label: "Mensual (Últimos 30 días)" },
+                    { value: "personalizado", label: "Rango de fechas" }
+                  ]}
+                />
               </div>
             </div>
 

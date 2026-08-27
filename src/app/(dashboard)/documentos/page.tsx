@@ -5,6 +5,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import Link from 'next/link';
 import { getApiUrl } from '@/lib/apiClient';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 
 export default function DocumentosPage() {
   const [documentos, setDocumentos] = useState<DocumentoConObra[]>([]);
@@ -38,22 +39,19 @@ export default function DocumentosPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <select
+          <div className="relative z-20">
+            <Dropdown
               value={filtroCategoria}
-              onChange={(e) => setFiltroCategoria(e.target.value as CategoriaDocumento | '')}
-              className="w-auto min-w-[200px] bg-white/5 border border-white/10 rounded-xl px-4 py-2 pr-10 text-text-main text-sm focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
-            >
-              <option value="" className="bg-surface text-text-main">Todas las categorías</option>
-              {Object.entries(categoriaDocumentoLabels).map(([val, label]) => (
-                <option key={val} value={val} className="bg-surface text-text-main">{label}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-muted">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+              onChange={(val) => setFiltroCategoria(val as CategoriaDocumento | '')}
+              placeholder="Todas las categorías"
+              options={[
+                { value: '', label: 'Todas las categorías' },
+                ...Object.entries(categoriaDocumentoLabels).map(([val, label]) => ({
+                  value: val,
+                  label: label
+                }))
+              ]}
+            />
           </div>
           
           <Link href="/documentos/nuevo">

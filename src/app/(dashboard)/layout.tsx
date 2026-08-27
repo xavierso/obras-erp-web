@@ -13,6 +13,7 @@ export default function DashboardLayout({
 
   const navLinks = [
     ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Inicio', href: '/home' }] : []),
+    { name: 'Calendario', href: '/calendario' },
     { name: 'Obras', href: '/obras' },
     { name: 'Tareas', href: '/tareas' },
     { name: 'Incidencias', href: '/incidencias' },

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { citasApi, CitaVisita, EstadoCita, estadoCitaLabels } from '@/lib/citasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import Link from 'next/link';
 
 export default function CitaDetailPage() {
@@ -146,23 +147,19 @@ export default function CitaDetailPage() {
                   </div>
                   <div>
                     <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Recordatorio</label>
-                    <div className="relative">
-                      <select 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-text-main focus:outline-none focus:border-accent appearance-none cursor-pointer [color-scheme:dark]"
+                    <div className="relative z-20">
+                      <Dropdown
                         value={editRecordatorio}
-                        onChange={(e) => setEditRecordatorio(e.target.value)}
-                      >
-                        <option value="none" className="bg-surface text-text-main">Sin recordatorio</option>
-                        <option value="0" className="bg-surface text-text-main">Al momento exacto</option>
-                        <option value="30" className="bg-surface text-text-main">30 minutos antes</option>
-                        <option value="180" className="bg-surface text-text-main">3 horas antes</option>
-                        <option value="1440" className="bg-surface text-text-main">1 día antes</option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
+                        onChange={setEditRecordatorio}
+                        fullWidth
+                        options={[
+                          { value: 'none', label: 'Sin recordatorio' },
+                          { value: '0', label: 'Al momento exacto' },
+                          { value: '30', label: '30 minutos antes' },
+                          { value: '180', label: '3 horas antes' },
+                          { value: '1440', label: '1 día antes' }
+                        ]}
+                      />
                     </div>
                   </div>
                 </div>

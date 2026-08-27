@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { documentosApi, CategoriaDocumento, categoriaDocumentoLabels } from '@/lib/documentosApi';
 import { obrasApi, Obra } from '@/lib/obrasApi';
+import { Dropdown } from '@/components/ui/Dropdown';
 import Link from 'next/link';
 
 export default function NuevoDocumentoGlobalPage() {
@@ -87,25 +88,18 @@ export default function NuevoDocumentoGlobalPage() {
             <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">
               Obra / Proyecto
             </label>
-            <div className="relative">
-              <select 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text-main focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer [color-scheme:dark]"
-                value={obraId}
-                onChange={(e) => setObraId(e.target.value ? Number(e.target.value) : '')}
+            <div className="relative z-30">
+              <Dropdown
+                value={obraId.toString()}
+                onChange={(val) => setObraId(val ? Number(val) : '')}
                 disabled={cargandoObras}
-              >
-                <option value="" className="bg-surface text-text-main">-- Selecciona una obra --</option>
-                {obras.map(obra => (
-                  <option key={obra.id} value={obra.id} className="bg-surface text-text-main">
-                    {obra.codigo} - {obra.nombre}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                placeholder="-- Selecciona una obra --"
+                fullWidth
+                options={[
+                  { value: '', label: '-- Selecciona una obra --' },
+                  ...obras.map(obra => ({ value: obra.id.toString(), label: `${obra.codigo} - ${obra.nombre}` }))
+                ]}
+              />
             </div>
           </div>
 
@@ -113,23 +107,16 @@ export default function NuevoDocumentoGlobalPage() {
             <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">
               Categoría
             </label>
-            <div className="relative">
-              <select 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 pr-10 text-text-main focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer [color-scheme:dark]"
+            <div className="relative z-20">
+              <Dropdown
                 value={categoria}
-                onChange={(e) => setCategoria(e.target.value as CategoriaDocumento)}
-              >
-                {Object.entries(categoriaDocumentoLabels).map(([val, label]) => (
-                  <option key={val} value={val} className="bg-surface text-text-main">
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+                onChange={(val) => setCategoria(val as CategoriaDocumento)}
+                fullWidth
+                options={Object.entries(categoriaDocumentoLabels).map(([val, label]) => ({
+                  value: val,
+                  label: label
+                }))}
+              />
             </div>
           </div>
 

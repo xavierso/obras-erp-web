@@ -55,7 +55,7 @@ export default function NuevoDocumentoGlobalPage() {
     
     try {
       await documentosApi.subir(Number(obraId), categoria, archivo);
-      router.push('/documentos');
+      router.replace('/documentos');
     } catch (err: any) {
       setError(err.message || 'Error al subir el documento');
       setSubiendo(false);

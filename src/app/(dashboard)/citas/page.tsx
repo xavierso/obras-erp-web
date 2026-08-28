@@ -7,22 +7,33 @@ import Link from 'next/link';
 
 export default function CitasPage() {
   const [citas, setCitas] = useState<CitaVisita[]>([]);
+  const [obrasMap, setObrasMap] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCitas = async () => {
+    const fetchData = async () => {
       try {
-        const data = await citasApi.listar();
-        setCitas(data);
+        const { obrasApi } = await import('@/lib/obrasApi');
+        const [citasData, obrasData] = await Promise.all([
+          citasApi.listar(),
+          obrasApi.listar()
+        ]);
+        setCitas(citasData);
+        
+        const map: Record<number, string> = {};
+        obrasData.forEach(o => {
+          map[o.id] = `${o.codigo} - ${o.nombre}`;
+        });
+        setObrasMap(map);
       } catch (err) {
         const error = err as Error;
-        setError(error.message || 'Error al cargar las citas');
+        setError(error.message || 'Error al cargar los datos');
       } finally {
         setLoading(false);
       }
     };
-    fetchCitas();
+    fetchData();
   }, []);
 
   const getEstadoColor = (estado: EstadoCita) => {
@@ -81,7 +92,7 @@ export default function CitasPage() {
                 </div>
                 
                 <h3 className="font-bold text-lg text-text-main mb-1 group-hover:text-accent transition-colors truncate">
-                  {cita.nombre_referencia || `Obra #${cita.obra_id}`}
+                  {cita.nombre_referencia || (cita.obra_id ? obrasMap[cita.obra_id] || `Obra #${cita.obra_id}` : 'Cita')}
                 </h3>
                 
                 {cita.notas && (

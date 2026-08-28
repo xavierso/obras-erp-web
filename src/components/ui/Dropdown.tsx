@@ -37,7 +37,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ value, options, onChange, pl
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`bg-transparent border border-accent rounded-xl px-4 py-2 text-sm text-accent font-medium flex items-center justify-between gap-3 min-w-[180px] focus:outline-none ${fullWidth ? 'w-full' : ''} ${disabled ? 'cursor-not-allowed' : ''}`}
+        className={`bg-transparent border border-accent rounded-xl px-4 py-2 text-sm text-accent font-medium flex items-center justify-between gap-3 min-w-[140px] md:min-w-[180px] focus:outline-none ${fullWidth ? 'w-full' : ''} ${disabled ? 'cursor-not-allowed' : ''}`}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
         <svg className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,7 +46,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ value, options, onChange, pl
       </button>
 
       {isOpen && (
-        <div className={`absolute top-full ${fullWidth ? 'left-0 w-full' : 'right-0 min-w-[180px]'} mt-2 bg-[#E5E7EB] rounded-xl shadow-lg z-50 overflow-hidden text-sm`}>
+        <div className={`absolute top-full ${fullWidth ? 'left-0 w-full' : 'right-0 min-w-[140px] md:min-w-[180px]'} mt-2 bg-[#E5E7EB] rounded-xl shadow-lg z-50 overflow-hidden text-sm`}>
           {options.map(opt => (
             <div 
               key={opt.value}

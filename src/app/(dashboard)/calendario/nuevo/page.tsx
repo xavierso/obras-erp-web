@@ -29,7 +29,7 @@ export default function NuevaActividadPage() {
 
   useEffect(() => {
     if (isUserLector(user)) {
-      router.push('/calendario');
+      router.replace('/calendario');
       return;
     }
     obrasApi.listar().then(setObras).catch(console.error);
@@ -43,9 +43,9 @@ export default function NuevaActividadPage() {
     // Si elige Visita, Tarea o Incidencia, debe redirigirse al módulo correspondiente.
     // Esto se maneja en el formulario visualmente, pero por seguridad validamos aquí.
     if (['visita', 'tarea', 'incidencia'].includes(formData.tipo)) {
-      if (formData.tipo === 'visita') router.push('/visitas');
-      if (formData.tipo === 'tarea') router.push('/tareas');
-      if (formData.tipo === 'incidencia') router.push('/incidencias');
+      if (formData.tipo === 'visita') router.replace('/visitas');
+      if (formData.tipo === 'tarea') router.replace('/tareas');
+      if (formData.tipo === 'incidencia') router.replace('/incidencias');
       return;
     }
 
@@ -59,7 +59,7 @@ export default function NuevaActividadPage() {
         hora_inicio: formData.hora_inicio ? `${formData.hora_inicio}:00` : undefined,
         hora_fin: formData.hora_fin ? `${formData.hora_fin}:00` : undefined,
       });
-      router.push('/calendario');
+      router.replace('/calendario');
     } catch (err: any) {
       setError(err.message || 'Error al guardar la actividad');
       setLoading(false);
@@ -150,7 +150,7 @@ export default function NuevaActividadPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Hora inicio (Opcional)</label>
                 <input

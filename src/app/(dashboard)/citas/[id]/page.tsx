@@ -13,6 +13,7 @@ export default function CitaDetailPage() {
   const citaId = parseInt(params.id as string, 10);
   
   const [cita, setCita] = useState<CitaVisita | null>(null);
+  const [obraNombre, setObraNombre] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,6 +29,14 @@ export default function CitaDetailPage() {
       try {
         const data = await citasApi.obtener(citaId);
         setCita(data);
+        
+        if (data.obra_id) {
+          const { obrasApi } = await import('@/lib/obrasApi');
+          try {
+            const obra = await obrasApi.obtener(data.obra_id);
+            setObraNombre(`${obra.codigo} - ${obra.nombre}`);
+          } catch(e) {}
+        }
         
         // Initialize editable fields
         // Format for datetime-local: YYYY-MM-DDThh:mm
@@ -87,7 +96,7 @@ export default function CitaDetailPage() {
     setSavingAction(true);
     try {
       await citasApi.eliminar(cita.id);
-      router.push('/citas');
+      router.replace('/citas');
     } catch (err) {
       alert('Error al eliminar la cita');
       setSavingAction(false);
@@ -107,7 +116,7 @@ export default function CitaDetailPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-text-main">
-            {cita.nombre_referencia || `Cita para Obra #${cita.obra_id}`}
+            {cita.nombre_referencia || (cita.obra_id ? (obraNombre || `Obra #${cita.obra_id}`) : 'Cita')}
           </h1>
           <p className="text-text-muted text-sm">Detalles de la cita programada</p>
         </div>

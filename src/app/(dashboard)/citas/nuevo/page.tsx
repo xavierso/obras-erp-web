@@ -83,7 +83,11 @@ function NuevaCitaForm() {
         recordatorio_minutos_antes: recordatorio === 'none' ? null : parseInt(recordatorio, 10)
       });
       toast.success('Cita programada correctamente');
-      router.push('/citas');
+      if (queryObraId) {
+        router.replace(`/obras/${queryObraId}`);
+      } else {
+        router.replace('/citas');
+      }
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Error al programar la cita');
@@ -94,7 +98,7 @@ function NuevaCitaForm() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center space-x-4 mb-2">
-        <Link href="/citas" className="text-text-muted hover:text-accent transition-colors">
+        <Link href={queryObraId ? `/obras/${queryObraId}` : "/citas"} className="text-text-muted hover:text-accent transition-colors">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -205,7 +209,7 @@ function NuevaCitaForm() {
           </div>
 
           <div className="pt-4 flex gap-4">
-            <Link href="/citas" className="flex-1">
+            <Link href={queryObraId ? `/obras/${queryObraId}` : "/citas"} className="flex-1">
               <Button type="button" variant="outlined" className="w-full">Cancelar</Button>
             </Link>
             <div className="flex-1">

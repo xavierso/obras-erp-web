@@ -123,7 +123,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Responsable</label>
             <div className="relative z-30">

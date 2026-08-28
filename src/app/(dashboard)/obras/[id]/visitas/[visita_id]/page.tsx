@@ -82,7 +82,7 @@ export default function VisitaDetallePage() {
     if (!confirm('¿Estás seguro de que deseas eliminar permanentemente esta visita?\nSe perderán todas sus fotos y observaciones.')) return;
     try {
       await visitasApi.eliminar(obraId, visitaId);
-      router.push(`/obras/${obraId}`);
+      router.replace(`/obras/${obraId}`);
     } catch (err: any) {
       setError(err.message || 'Error al eliminar la visita');
     }
@@ -107,26 +107,28 @@ export default function VisitaDetallePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center space-x-4 mb-4">
-        <button onClick={() => router.back()} className="text-text-muted hover:text-accent transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
-        <div className="flex-1 flex items-center space-x-3">
-          <div>
-            <h1 className="text-2xl font-bold text-text-main">
-              {isEditing ? 'Editar Visita' : 'Detalles de la Visita'}
-            </h1>
-            <p className="text-text-muted text-sm">
-              {new Date(visita.fecha).toLocaleString()}
-            </p>
-          </div>
-          <button onClick={handleEliminarVisita} className="text-red-400 hover:text-red-500 transition-colors p-1 self-start mt-1" title="Eliminar Visita">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex items-start md:items-center space-x-4">
+          <button onClick={() => router.back()} className="text-text-muted hover:text-accent transition-colors mt-1 md:mt-0">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </button>
+          <div className="flex items-start md:items-center space-x-3">
+            <div>
+              <h1 className="text-2xl font-bold text-text-main">
+                {isEditing ? 'Editar Visita' : 'Detalles de la Visita'}
+              </h1>
+              <p className="text-text-muted text-sm">
+                {new Date(visita.fecha).toLocaleString()}
+              </p>
+            </div>
+            <button onClick={handleEliminarVisita} className="text-red-400 hover:text-red-500 transition-colors p-1" title="Eliminar Visita">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </div>
         </div>
-        <div>
+        <div className="flex flex-wrap gap-2">
           <Button 
             fullWidth={false}
             onClick={async () => {

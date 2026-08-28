@@ -47,8 +47,7 @@ export default function DashboardLayout({
 
   const navLinks = getNavLinks();
   
-  // Mobile nav shows fewer items to fit the bottom bar
-  const mobileLinks = navLinks.filter(l => ['Inicio', 'Obras', 'Calendario', 'Equipo'].includes(l.name));
+  // Nav links computed directly in render for mobile
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -144,7 +143,7 @@ export default function DashboardLayout({
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 pb-6 z-50 pointer-events-none">
         <GlassCard padding="p-2" className="flex justify-between items-center rounded-2xl pointer-events-auto shadow-2xl shadow-black/50 border-t border-white/10 relative">
-          {mobileLinks.slice(0, 2).map((link) => {
+          {navLinks.filter(l => ['Inicio', 'Obras'].includes(l.name)).map((link) => {
             const Icon = link.icon;
             const isActive = pathname.startsWith(link.href);
             return (
@@ -166,9 +165,8 @@ export default function DashboardLayout({
             {/* FAB Menu */}
             {isFabOpen && (
               <>
-                {/* Backdrop invisible para cerrar al tocar fuera */}
                 <div 
-                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm pointer-events-auto"
                   onClick={() => setIsFabOpen(false)}
                 />
                 <div className="absolute bottom-16 mb-4 w-48 bg-surface-2 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
@@ -180,18 +178,26 @@ export default function DashboardLayout({
                     <AlertTriangle className="w-4 h-4 text-error" />
                     Incidencias
                   </Link>
-                  <Link href="/citas" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
-                    <CalendarDays className="w-4 h-4 text-warning" />
-                    Citas
-                  </Link>
-                  <Link href="/visitas" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
-                    <MapPin className="w-4 h-4 text-success" />
-                    Visitas
-                  </Link>
-                  <Link href="/documentos" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 transition-colors">
-                    <FileText className="w-4 h-4 text-text-muted" />
-                    Documentos
-                  </Link>
+                  {(isUserAdmin(user) || isUserDirector(user)) && (
+                    <>
+                      <Link href="/citas" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
+                        <CalendarDays className="w-4 h-4 text-warning" />
+                        Citas
+                      </Link>
+                      <Link href="/visitas" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
+                        <MapPin className="w-4 h-4 text-success" />
+                        Visitas
+                      </Link>
+                      <Link href="/documentos" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
+                        <FileText className="w-4 h-4 text-text-muted" />
+                        Documentos
+                      </Link>
+                    </>
+                  )}
+                  <button onClick={() => { setIsFabOpen(false); logout(); }} className="flex items-center gap-3 px-4 py-3.5 text-sm text-error hover:bg-error/10 transition-colors w-full text-left">
+                    <LogOut className="w-4 h-4" />
+                    Cerrar sesión
+                  </button>
                 </div>
               </>
             )}
@@ -204,22 +210,29 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {mobileLinks.slice(2, 4).map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname.startsWith(link.href);
-            return (
-              <Link 
-                key={link.name} 
-                href={link.href}
-                className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all ${
-                  isActive ? 'text-brand-blue' : 'text-text-muted'
-                }`}
-              >
-                <Icon className={`w-5 h-5 mb-1 ${isActive ? 'text-brand-blue' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">{link.name}</span>
-              </Link>
-            );
-          })}
+          {(() => {
+            const rightLinks = [
+              navLinks.find(l => l.name === 'Calendario'),
+              (isUserAdmin(user) || isUserDirector(user)) ? navLinks.find(l => l.name === 'Equipo') : navLinks.find(l => l.name === 'Tareas')
+            ].filter(Boolean) as any[];
+
+            return rightLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = link.href !== '#' && pathname.startsWith(link.href);
+              return (
+                <Link 
+                  key={link.name} 
+                  href={link.href}
+                  className={`flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all ${
+                    isActive ? 'text-brand-blue' : 'text-text-muted'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 mb-1 ${isActive ? 'text-brand-blue' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[10px] font-medium">{link.name}</span>
+                </Link>
+              );
+            });
+          })()}
         </GlassCard>
       </div>
     </div>

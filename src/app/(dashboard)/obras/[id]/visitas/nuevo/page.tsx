@@ -33,7 +33,7 @@ export default function NuevaVisitaPage() {
     try {
       await visitasApi.crear(obraId, descripcion, archivos);
       toast.success('Visita registrada correctamente');
-      router.push(`/obras/${obraId}`);
+      router.replace(`/obras/${obraId}`);
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Error al registrar la visita');

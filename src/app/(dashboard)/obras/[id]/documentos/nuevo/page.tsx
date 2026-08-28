@@ -37,7 +37,7 @@ export default function NuevoDocumentoPage() {
     try {
       await documentosApi.subir(obraId, categoria, archivo);
       // Tras subirlo volvemos a la obra (donde asumo que podríamos agregar una pestaña de documentos después, pero por ahora volvemos)
-      router.push(`/obras/${obraId}`);
+      router.replace(`/obras/${obraId}`);
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Error al subir el documento');

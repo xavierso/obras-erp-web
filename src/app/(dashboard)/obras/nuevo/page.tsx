@@ -21,7 +21,7 @@ export default function NuevaObraPage() {
     
     try {
       const nuevaObra = await obrasApi.crear(nombre, cliente, direccion);
-      router.push(`/obras/${nuevaObra.id}`);
+      router.replace(`/obras/${nuevaObra.id}`);
     } catch (err) {
       const error = err as Error;
       setError(error.message || 'Error al crear la obra');

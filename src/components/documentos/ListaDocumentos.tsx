@@ -11,7 +11,11 @@ interface ListaDocumentosProps {
   onRefresh: () => void;
 }
 
+import { useAuth } from '@/context/AuthContext';
+import { isUserAdmin, isUserDirector } from '@/lib/authApi';
+
 export function ListaDocumentos({ obraId, documentos, onRefresh }: ListaDocumentosProps) {
+  const { user } = useAuth();
   const [filtroCategoria, setFiltroCategoria] = useState<CategoriaDocumento | ''>('');
 
   const docsFiltrados = filtroCategoria 
@@ -22,11 +26,13 @@ export function ListaDocumentos({ obraId, documentos, onRefresh }: ListaDocument
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold text-text-main">Documentación ({documentos.length})</h3>
-        <Link href={`/obras/${obraId}/documentos/nuevo`}>
-          <Button fullWidth={false} className="!min-h-[32px] px-3 py-1.5 text-xs">
-            Subir Documento
-          </Button>
-        </Link>
+        {(isUserAdmin(user) || isUserDirector(user)) && (
+          <Link href={`/obras/${obraId}/documentos/nuevo`}>
+            <Button fullWidth={false} className="!min-h-[32px] px-3 py-1.5 text-xs">
+              Subir Documento
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="mb-4 relative w-fit z-20">

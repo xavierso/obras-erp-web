@@ -6,8 +6,11 @@ import Link from 'next/link';
 import { getApiUrl } from '@/lib/apiClient';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { useAuth } from '@/context/AuthContext';
+import { isUserAdmin, isUserDirector } from '@/lib/authApi';
 
 export default function DocumentosPage() {
+  const { user } = useAuth();
   const [documentos, setDocumentos] = useState<DocumentoConObra[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,17 +57,19 @@ export default function DocumentosPage() {
             />
           </div>
           
-          <Link href="/documentos/nuevo">
-            <Button 
-              fullWidth={false}
-              className="!min-h-[38px] px-4 py-1.5 text-sm flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              Subir Documento
-            </Button>
-          </Link>
+          {(isUserAdmin(user) || isUserDirector(user)) && (
+            <Link href="/documentos/nuevo">
+              <Button 
+                fullWidth={false}
+                className="!min-h-[38px] px-4 py-1.5 text-sm flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Subir Documento
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

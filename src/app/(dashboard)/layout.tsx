@@ -33,7 +33,7 @@ export default function DashboardLayout({
 
   const getNavLinks = () => {
     return [
-      ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Inicio', href: '/home', icon: Home }] : []),
+      { name: 'Inicio', href: '/home', icon: Home },
       { name: 'Obras', href: '/obras', icon: Briefcase },
       { name: 'Tareas', href: '/tareas', icon: CheckSquare },
       { name: 'Incid', href: '/incidencias', icon: AlertTriangle },

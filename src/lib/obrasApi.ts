@@ -31,6 +31,10 @@ export interface Obra {
   estado_actual_texto?: string;
   total_visitas: number;
   ultima_visita_fecha?: string;
+  presupuesto_aprobado?: number;
+  coste_estimado?: number;
+  margen_estimado?: number;
+  estado_presupuesto?: string;
 }
 
 export const obrasApi = {

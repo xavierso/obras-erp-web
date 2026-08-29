@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Tarea, TareaCreate, TareaUpdate, EstadoTarea, tareasApi } from '@/lib/tareasApi';
 import { equipoApi, MiembroEquipoOut } from '@/lib/equipoApi';
+import { cronogramaApi, ActividadCronograma } from '@/lib/cronogramaApi';
 
 interface FormTareaInlineProps {
   obraId: number;
@@ -17,12 +18,14 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
   const [descripcion, setDescripcion] = useState(tareaSeleccionada?.descripcion || '');
   const [fechaLimite, setFechaLimite] = useState(tareaSeleccionada?.fecha_limite || '');
   const [responsableId, setResponsableId] = useState<number | ''>(tareaSeleccionada?.responsable_id || '');
+  const [actividadId, setActividadId] = useState<number | ''>(tareaSeleccionada?.actividad_id || '');
   const [estado, setEstado] = useState<EstadoTarea>(tareaSeleccionada?.estado || EstadoTarea.PENDIENTE);
   const [archivos, setArchivos] = useState<File[]>([]);
   
   const [miembros, setMiembros] = useState<MiembroEquipoOut[]>([]);
+  const [actividades, setActividades] = useState<ActividadCronograma[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingMiembros, setLoadingMiembros] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -37,18 +40,22 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
   };
 
   useEffect(() => {
-    const fetchMiembros = async () => {
+    const fetchData = async () => {
       try {
-        const resumen = await equipoApi.obtenerResumen();
+        const [resumen, crono] = await Promise.all([
+          equipoApi.obtenerResumen(),
+          cronogramaApi.listarPorObra(obraId)
+        ]);
         setMiembros(resumen.miembros.filter(m => m.is_active));
+        setActividades(crono);
       } catch (error) {
-        console.error('Error al cargar miembros', error);
+        console.error('Error al cargar datos del formulario', error);
       } finally {
-        setLoadingMiembros(false);
+        setLoadingData(false);
       }
     };
-    fetchMiembros();
-  }, []);
+    fetchData();
+  }, [obraId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +69,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
           descripcion: descripcion || null,
           fecha_limite: fechaLimite || null,
           responsable_id: responsableId === '' ? null : Number(responsableId),
+          actividad_id: actividadId === '' ? null : Number(actividadId),
           estado,
           archivos
         };
@@ -73,6 +81,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
           descripcion: descripcion || null,
           fecha_limite: fechaLimite || null,
           responsable_id: responsableId === '' ? null : Number(responsableId),
+          actividad_id: actividadId === '' ? null : Number(actividadId),
           estado,
           archivos
         };
@@ -130,7 +139,7 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
               <Dropdown
                 value={responsableId.toString()}
                 onChange={(val) => setResponsableId(val === '' ? '' : Number(val))}
-                disabled={loadingMiembros}
+                disabled={loadingData}
                 placeholder="Sin asignar"
                 fullWidth
                 options={[
@@ -141,6 +150,25 @@ export function FormTareaInline({ obraId, visitaId, tareaSeleccionada, onClose, 
             </div>
           </div>
           
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">Actividad de Cronograma</label>
+            <div className="relative z-20">
+              <Dropdown
+                value={actividadId.toString()}
+                onChange={(val) => setActividadId(val === '' ? '' : Number(val))}
+                disabled={loadingData}
+                placeholder="Sin vincular"
+                fullWidth
+                options={[
+                  { value: '', label: 'Ninguna' },
+                  ...actividades.map(a => ({ value: a.id.toString(), label: `${a.es_hito ? '◆' : '▪'} ${a.nombre}` }))
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Fecha Límite</label>
             <input 

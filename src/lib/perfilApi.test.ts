@@ -29,7 +29,7 @@ describe('perfilApi', () => {
 
   it('actualizar() calls PUT with FormData', async () => {
     (apiClient.put as jest.Mock).mockResolvedValueOnce({ data: {} });
-    await perfilApi.actualizar('Test', '#fff');
+    await perfilApi.actualizar('Test', '#fff', 'dir', 'tel', 'email', 'cif');
     expect(apiClient.put).toHaveBeenCalledWith('/perfil', expect.any(FormData), expect.any(Object));
   });
 });

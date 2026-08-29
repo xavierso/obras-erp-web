@@ -42,6 +42,7 @@ export default function DashboardLayout({
       ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Visitas', href: '/visitas', icon: MapPin }] : []),
       ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Docs', href: '/documentos', icon: FileText }] : []),
       ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Equipo', href: '/perfil', icon: Users }] : []),
+      ...(isUserAdmin(user) || isUserDirector(user) ? [{ name: 'Presupuestos', href: '/presupuestos', icon: FileText }] : []),
     ];
   };
 
@@ -191,6 +192,10 @@ export default function DashboardLayout({
                       <Link href="/documentos" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
                         <FileText className="w-4 h-4 text-text-muted" />
                         Documentos
+                      </Link>
+                      <Link href="/presupuestos" onClick={() => setIsFabOpen(false)} className="flex items-center gap-3 px-4 py-3.5 text-sm text-text-main hover:bg-white/5 border-b border-white/5 transition-colors">
+                        <FileText className="w-4 h-4 text-brand-blue" />
+                        Presupuestos
                       </Link>
                     </>
                   )}

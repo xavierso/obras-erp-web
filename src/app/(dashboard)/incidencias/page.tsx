@@ -91,6 +91,11 @@ export default function IncidenciasGlobalPage() {
           <p className="text-text-muted max-w-md mx-auto">
             No hay incidencias reportadas en ninguna de tus obras actualmente. ¡Excelente trabajo!
           </p>
+          <a href="/obras" className="inline-block mt-4">
+            <Button variant="primary" fullWidth={false} className="px-6 py-2 min-h-[40px]">
+              Ir a Obras para crear una incidencia
+            </Button>
+          </a>
         </GlassCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

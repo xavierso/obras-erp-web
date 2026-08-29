@@ -35,6 +35,7 @@ export interface Tarea {
   id: number;
   obra_id: number;
   visita_id?: number;
+  actividad_id?: number;
   incidencia_id?: number;
   creador_id: number;
   responsable_id?: number;
@@ -53,6 +54,7 @@ export interface Tarea {
 
 export interface TareaCreate {
   visita_id?: number | null;
+  actividad_id?: number | null;
   titulo: string;
   descripcion?: string | null;
   fecha_limite?: string | null;
@@ -66,6 +68,7 @@ export interface TareaUpdate {
   descripcion?: string | null;
   fecha_limite?: string | null;
   responsable_id?: number | null;
+  actividad_id?: number | null;
   estado?: EstadoTarea;
   archivos?: File[];
 }

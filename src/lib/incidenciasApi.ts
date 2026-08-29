@@ -34,6 +34,7 @@ export interface Incidencia {
   codigo: string;
   obra_id: number;
   visita_id?: number;
+  actividad_id?: number;
   creador_id: number;
   responsable_id?: number;
   titulo: string;
@@ -55,6 +56,7 @@ export interface Incidencia {
 
 export interface IncidenciaCreate {
   visita_id?: number | null;
+  actividad_id?: number | null;
   titulo: string;
   descripcion?: string | null;
   observaciones?: string | null;
@@ -72,6 +74,7 @@ export interface IncidenciaUpdate {
   fecha_deteccion?: string;
   fecha_limite?: string | null;
   responsable_id?: number | null;
+  actividad_id?: number | null;
   estado?: EstadoIncidencia;
   archivos?: File[];
 }

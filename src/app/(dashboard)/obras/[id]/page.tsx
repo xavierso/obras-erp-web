@@ -120,29 +120,17 @@ export default function ObraDetailPage() {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-2">
-        <Link href={`/obras/${obraId}/calendario`}>
-          <Button 
-            variant="outlined"
-            fullWidth={false}
-            className="!min-h-[40px] px-5 py-2 flex items-center space-x-2 text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>Calendario</span>
-          </Button>
-        </Link>
-        <Button 
-          fullWidth={false}
-          onClick={() => setModalInformeOpen(true)} 
-          className="!min-h-[40px] px-5 py-2 flex items-center space-x-2 text-sm"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span>Generar Informe</span>
-        </Button>
+      <div className="flex justify-end mt-2 md:mt-0 w-48 relative z-50">
+        <Dropdown
+          value={obra.estado}
+          disabled={cambiandoEstado || (!isUserAdmin(user) && !isUserDirector(user))}
+          onChange={(val) => handleCambiarEstado(val as EstadoObra)}
+          fullWidth
+          options={Object.entries(estadoObraLabels).map(([val, label]) => ({
+            value: val,
+            label: label
+          }))}
+        />
       </div>
     </div>
 
@@ -172,6 +160,36 @@ export default function ObraDetailPage() {
               <div>
                 <span className="block text-text-muted text-xs">Progreso</span>
                 <span className="text-text-main">{obra.progreso_porcentaje ?? 0}%</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <h3 className="font-semibold text-text-main mb-4 text-sm">Control Económico</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-text-muted text-xs">Ppto. Aprobado</span>
+                  <span className="text-text-main font-semibold">
+                    {obra.presupuesto_aprobado != null ? `${obra.presupuesto_aprobado.toLocaleString('es-ES')} €` : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted text-xs">Coste Estimado</span>
+                  <span className="text-text-main">
+                    {obra.coste_estimado != null ? `${obra.coste_estimado.toLocaleString('es-ES')} €` : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted text-xs">Margen Estimado</span>
+                  <span className={`${obra.margen_estimado && obra.margen_estimado < 0 ? 'text-red-400' : 'text-green-400'} font-semibold`}>
+                    {obra.margen_estimado != null ? `${obra.margen_estimado.toLocaleString('es-ES')} €` : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between mt-2 pt-2 border-t border-white/5">
+                  <span className="text-text-muted text-xs">Estado Ppto.</span>
+                  <span className="text-accent text-xs font-semibold">
+                    {obra.estado_presupuesto ? obra.estado_presupuesto.replace('_', ' ').toUpperCase() : 'NO ACTIVO'}
+                  </span>
+                </div>
               </div>
             </div>
           </GlassCard>
@@ -225,30 +243,30 @@ export default function ObraDetailPage() {
           </GlassCard>
         </div>
 
-        {/* ROW 2: Estado Actual (Izquierda) + Tareas (Derecha) */}
-        <div className="lg:col-span-1 h-full relative z-20">
+        {/* ROW 2: Módulos (Izquierda) + Tareas (Derecha) */}
+        <div className="lg:col-span-1 h-full">
           <GlassCard padding="p-5" className="h-full">
-            <h3 className="font-semibold text-text-main mb-4">Estado Actual</h3>
-            <div className="mb-4">
-              <span className="text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-lg text-sm font-semibold">
-                {estadoObraLabels[obra.estado]}
-              </span>
-            </div>
-            
-            <div className="space-y-2 mt-6">
-              <p className="text-xs text-text-muted mb-2">Cambiar estado a:</p>
-              <div className="relative">
-                <Dropdown
-                  value={obra.estado}
-                  disabled={cambiandoEstado || (!isUserAdmin(user) && !isUserDirector(user))}
-                  onChange={(val) => handleCambiarEstado(val as EstadoObra)}
-                  fullWidth
-                  options={Object.entries(estadoObraLabels).map(([val, label]) => ({
-                    value: val,
-                    label: label
-                  }))}
-                />
-              </div>
+            <h3 className="font-semibold text-text-main mb-4">Herramientas de Obra</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Link href={`/obras/${obraId}/calendario`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
+                <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-xs font-semibold text-text-main">Calendario</span>
+              </Link>
+              
+              <Link href={`/obras/${obraId}/presupuestos`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
+                <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                <span className="text-xs font-semibold text-text-main">Presupuestos</span>
+              </Link>
+
+              <Link href={`/obras/${obraId}/cronograma`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
+                <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                <span className="text-xs font-semibold text-text-main">Cronograma</span>
+              </Link>
+
+              <button onClick={() => setModalInformeOpen(true)} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
+                <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span className="text-xs font-semibold text-text-main text-center">Informe PDF</span>
+              </button>
             </div>
           </GlassCard>
         </div>

@@ -4,6 +4,8 @@ import { tareasApi, Tarea } from '@/lib/tareasApi';
 import { obrasApi, Obra } from '@/lib/obrasApi';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ListaTareas } from '@/components/tareas/ListaTareas';
+import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 
 export default function TareasPage() {
   const [obras, setObras] = useState<Obra[]>([]);
@@ -75,8 +77,13 @@ export default function TareasPage() {
       </div>
 
       {tareas.length === 0 ? (
-        <GlassCard className="text-center py-12">
+        <GlassCard className="text-center py-12 flex flex-col items-center justify-center space-y-4">
           <p className="text-text-muted">No hay tareas registradas en ninguna obra actualmente.</p>
+          <a href="/obras" className="inline-block mt-4">
+            <Button variant="primary" fullWidth={false} className="px-6 py-2 min-h-[40px]">
+              Ir a Obras para crear una tarea
+            </Button>
+          </a>
         </GlassCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

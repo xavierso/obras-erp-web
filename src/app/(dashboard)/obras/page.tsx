@@ -112,12 +112,18 @@ export default function ObrasPage() {
                     <span className="font-semibold text-text-main">{obra.total_visitas}</span>
                     <span>Visitas</span>
                   </div>
-                  {obra.progreso_porcentaje !== undefined && (
-                    <div className="flex flex-col items-end">
-                      <span className="font-semibold text-success">{obra.progreso_porcentaje}%</span>
-                      <span>Progreso</span>
+                  <div className="flex flex-col items-end w-[40%]">
+                    <div className="flex justify-between w-full mb-1">
+                      <span>Avance</span>
+                      <span className="font-bold text-brand-blue">{obra.progreso_porcentaje ?? 0}%</span>
                     </div>
-                  )}
+                    <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
+                      <div 
+                        className="bg-brand-blue h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${obra.progreso_porcentaje ?? 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
               </GlassCard>
             </Link>

@@ -5,6 +5,8 @@ export interface ResumenDashboard {
   visitas_hoy: number;
   visitas_semana: number;
   documentos_nuevos_semana: number;
+  actividades_retrasadas_total: number;
+  obras_avance: { id: number; nombre: string; progreso_porcentaje: number }[];
 }
 
 export const dashboardApi = {

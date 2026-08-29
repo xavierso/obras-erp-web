@@ -5,6 +5,8 @@ import { obrasApi, Obra, estadoObraLabels, EstadoObra } from '@/lib/obrasApi';
 import { citasApi, CitaVisita } from '@/lib/citasApi';
 import { tareasApi, Tarea, EstadoTarea } from '@/lib/tareasApi';
 import { calendarioApi, EventoCalendarioOut } from '@/lib/calendarioApi';
+import { presupuestosApi, PresupuestoResumen, estadoPresupuestoLabels } from '@/lib/presupuestosApi';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -20,7 +22,8 @@ import {
   ArrowRight,
   TrendingUp,
   Activity,
-  CheckSquare
+  CheckSquare,
+  Calculator
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -29,17 +32,20 @@ export default function HomePage() {
   const [obrasRecientes, setObrasRecientes] = useState<Obra[]>([]);
   const [eventosPendientes, setEventosPendientes] = useState<EventoCalendarioOut[]>([]);
   const [tareasPendientes, setTareasPendientes] = useState<Tarea[]>([]);
+  const [presupuestos, setPresupuestos] = useState<PresupuestoResumen[]>([]);
+  const [filtroPresupuesto, setFiltroPresupuesto] = useState('todos');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [dashboardData, obrasData, eventosData, tareasData] = await Promise.all([
+        const [dashboardData, obrasData, eventosData, tareasData, presupuestosData] = await Promise.all([
           dashboardApi.obtenerResumen(),
           obrasApi.listar(),
           calendarioApi.listar({ fecha_inicio: new Date().toISOString().split('T')[0] }),
-          tareasApi.listar({ limit: 5 })
+          tareasApi.listar({ limit: 5 }),
+          presupuestosApi.listarTodos()
         ]);
         setResumen(dashboardData);
         setObrasRecientes(obrasData.slice(0, 3));
@@ -50,6 +56,7 @@ export default function HomePage() {
           
         setEventosPendientes(upcoming);
         setTareasPendientes(tareasData.filter(t => t.estado !== EstadoTarea.COMPLETADA).slice(0, 5));
+        setPresupuestos(presupuestosData.slice(0, 8));
       } catch (err) {
         const error = err as Error;
         setError(error.message || 'Error al cargar el dashboard');
@@ -167,6 +174,42 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* AVANCE DE OBRAS SECTION */}
+      {resumen && resumen.obras_avance.length > 0 && (
+        <div className="pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-text-main flex items-center gap-2">
+              <Activity className="w-5 h-5 text-brand-blue" />
+              Avance de Obras
+            </h2>
+            {resumen.actividades_retrasadas_total > 0 && (
+              <div className="bg-error/10 border border-error/20 px-3 py-1 rounded-full flex items-center text-xs">
+                <AlertCircle className="w-3.5 h-3.5 text-error mr-1.5" />
+                <span className="text-error font-bold">{resumen.actividades_retrasadas_total} actividades retrasadas</span>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {resumen.obras_avance.map(oa => (
+              <Link key={oa.id} href={`/obras/${oa.id}/cronograma`} className="block">
+                <GlassCard interactive padding="p-4" className="hover:border-brand-blue/30 transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-sm text-text-main truncate pr-2">{oa.nombre}</h3>
+                    <span className="text-xs font-bold text-brand-blue">{oa.progreso_porcentaje}%</span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2.5 border border-white/10 overflow-hidden">
+                    <div 
+                      className="bg-brand-blue h-2.5 rounded-full transition-all duration-500" 
+                      style={{ width: `${oa.progreso_porcentaje}%` }}
+                    ></div>
+                  </div>
+                </GlassCard>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TWO COLUMNS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
         
@@ -269,9 +312,18 @@ export default function HomePage() {
                           {estadoObraLabels[obra.estado]}
                         </span>
                       </div>
-                      <h3 className="font-bold text-sm text-text-main group-hover:text-brand-blue transition-colors truncate">
+                      <h3 className="font-bold text-sm text-text-main group-hover:text-brand-blue transition-colors truncate mb-2">
                         {obra.nombre}
                       </h3>
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden flex-1 border border-white/5">
+                          <div 
+                            className="bg-brand-blue h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${obra.progreso_porcentaje ?? 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-brand-blue">{obra.progreso_porcentaje ?? 0}%</span>
+                      </div>
                     </div>
                   </GlassCard>
                 </Link>
@@ -279,6 +331,70 @@ export default function HomePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* PRESUPUESTOS ROW */}
+      <div className="pt-6 border-t border-white/5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h2 className="text-lg font-semibold text-text-main flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-brand-blue" />
+            Gestión de Presupuestos
+          </h2>
+          
+          <div className="flex items-center gap-4 relative z-50">
+            <div className="w-48">
+              <Dropdown 
+                value={filtroPresupuesto}
+                onChange={setFiltroPresupuesto}
+                options={[
+                  { value: 'todos', label: 'Todos los estados' },
+                  ...Object.entries(estadoPresupuestoLabels).map(([val, label]) => ({ value: val, label }))
+                ]}
+              />
+            </div>
+            <Link href="/presupuestos" className="text-xs font-semibold text-text-muted hover:text-brand-blue transition-colors flex items-center gap-1">
+              Ver todos <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+
+        {presupuestos.filter(p => filtroPresupuesto === 'todos' || p.estado === filtroPresupuesto).length === 0 ? (
+          <GlassCard className="text-center py-10">
+            <Calculator className="w-10 h-10 text-text-muted/30 mx-auto mb-3" />
+            <p className="text-text-muted text-sm">No hay presupuestos con este estado.</p>
+          </GlassCard>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {presupuestos
+              .filter(p => filtroPresupuesto === 'todos' || p.estado === filtroPresupuesto)
+              .map(p => (
+              <Link key={p.id} href={p.obra_id ? `/obras/${p.obra_id}/presupuestos/${p.id}` : `/presupuestos/${p.id}`} className="block h-full">
+                <GlassCard interactive padding="p-4" className="h-full flex flex-col group relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-mono text-xs text-brand-blue/70">{p.codigo || `PTO-${p.id}`}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      p.estado === 'aprobado' ? 'bg-success/10 text-success border-success/20' :
+                      p.estado === 'enviado' ? 'bg-brand-blue/10 text-brand-blue border-brand-blue/20' :
+                      p.estado === 'borrador' ? 'bg-white/5 text-text-muted border-white/10' :
+                      'bg-warning/10 text-warning border-warning/20'
+                    }`}>
+                      {estadoPresupuestoLabels[p.estado]}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-sm text-text-main group-hover:text-brand-blue transition-colors mb-1 truncate">
+                    {p.nombre}
+                  </h3>
+                  <div className="mt-auto pt-3 flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] text-text-muted uppercase tracking-wider">Total</p>
+                      <p className="font-bold text-text-main">{p.total.toLocaleString('es-ES')} €</p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* TASKS ROW */}

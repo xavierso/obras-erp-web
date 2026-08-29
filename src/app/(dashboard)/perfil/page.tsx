@@ -19,6 +19,10 @@ export default function PerfilPage() {
   // Estados del Formulario de Perfil
   const [nombreEmpresa, setNombreEmpresa] = useState('');
   const [colorPrincipal, setColorPrincipal] = useState('#0B1B32');
+  const [direccion, setDireccion] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [cif, setCif] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
 
@@ -45,6 +49,10 @@ export default function PerfilPage() {
         setPerfil(perfilData);
         setNombreEmpresa(perfilData.nombre_empresa);
         setColorPrincipal(perfilData.color_principal);
+        setDireccion(perfilData.direccion || '');
+        setTelefono(perfilData.telefono || '');
+        setCorreo(perfilData.correo || '');
+        setCif(perfilData.cif || '');
       }
     } catch (err) {
       const error = err as Error;
@@ -62,7 +70,15 @@ export default function PerfilPage() {
     e.preventDefault();
     setGuardandoPerfil(true);
     try {
-      const actualizado = await perfilApi.actualizar(nombreEmpresa, colorPrincipal, logoFile || undefined);
+      const actualizado = await perfilApi.actualizar(
+        nombreEmpresa, 
+        colorPrincipal, 
+        direccion,
+        telefono,
+        correo,
+        cif,
+        logoFile || undefined
+      );
       setPerfil(actualizado);
       alert('Perfil actualizado con éxito');
     } catch (err) {
@@ -161,6 +177,51 @@ export default function PerfilPage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">CIF / NIF</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                      value={cif}
+                      onChange={(e) => setCif(e.target.value)}
+                      placeholder="Ej. B12345678"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Teléfono</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      placeholder="Ej. 600 123 456"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Correo Electrónico</label>
+                  <input 
+                    type="email"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
+                    placeholder="info@empresa.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Dirección Completa</label>
+                  <input 
+                    type="text"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-text-main focus:outline-none focus:border-accent"
+                    value={direccion}
+                    onChange={(e) => setDireccion(e.target.value)}
+                    placeholder="Ej. Av. de la Construcción 123, 28001 Madrid"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-text-muted text-sm font-semibold mb-2 ml-1">Logo de la Empresa</label>
                   <input 
@@ -195,27 +256,30 @@ export default function PerfilPage() {
           {/* Invitar */}
           <GlassCard padding="p-6">
             <h3 className="font-semibold text-text-main mb-3 text-sm">Invitar a un Miembro</h3>
-            <form onSubmit={handleInvitar} className="flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleInvitar} className="flex flex-col sm:flex-row gap-3 items-stretch">
               <input 
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 h-11 text-text-main text-sm focus:outline-none focus:border-accent"
+                className="flex-1 bg-surface-2 border border-white/10 rounded-xl px-4 h-12 text-text-main text-sm focus:outline-none focus:border-brand-blue min-w-0"
                 value={emailInvitar}
                 onChange={(e) => setEmailInvitar(e.target.value)}
                 required
               />
-              <div className="relative z-20">
-                <Dropdown
-                  value={rolInvitar}
-                  onChange={(val) => setRolInvitar(val as RolUsuario)}
-                  options={[
-                    ...(isUserAdmin(user) ? [{ value: 'DIRECTOR', label: 'Director' }] : []),
-                    { value: 'INSPECTOR', label: 'Inspector' },
-                    { value: 'LECTOR', label: 'Lector' }
-                  ]}
-                />
+              <div className="relative z-20 sm:w-48">
+                <div className="h-12 flex">
+                  <Dropdown
+                    value={rolInvitar}
+                    onChange={(val) => setRolInvitar(val as RolUsuario)}
+                    options={[
+                      ...(isUserAdmin(user) ? [{ value: 'DIRECTOR', label: 'Director' }] : []),
+                      { value: 'INSPECTOR', label: 'Inspector' },
+                      { value: 'LECTOR', label: 'Lector' }
+                    ]}
+                    fullWidth
+                  />
+                </div>
               </div>
-              <Button type="submit" disabled={invitando} className="px-6 h-11 !min-h-0 whitespace-nowrap" fullWidth={false}>
+              <Button type="submit" disabled={invitando} className="px-8 h-12 !min-h-0 whitespace-nowrap flex-shrink-0" fullWidth={false}>
                 {invitando ? '...' : 'Invitar'}
               </Button>
             </form>

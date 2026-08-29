@@ -24,7 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const perfil = await authApi.obtenerPerfilPropio();
       setUser(perfil);
     } catch (error) {
-      console.error('Error al obtener perfil', error);
+      // Si es un 401, el token caducó o es inválido. No imprimimos error para que Next.js Turbopack
+      // no muestre la pantalla roja gigante por un simple logout forzado.
       Cookies.remove('token');
       setUser(null);
       router.push('/auth/login');

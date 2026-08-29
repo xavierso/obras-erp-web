@@ -4,6 +4,7 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { useAuth } from '@/context/AuthContext';
 import { incidenciasApi, Incidencia, IncidenciaCreate, IncidenciaUpdate, EstadoIncidencia } from '@/lib/incidenciasApi';
 import { equipoApi, MiembroEquipoOut } from '@/lib/equipoApi';
+import { cronogramaApi, ActividadCronograma } from '@/lib/cronogramaApi';
 
 interface FormIncidenciaInlineProps {
   obraId: number;
@@ -18,19 +19,17 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
   const [titulo, setTitulo] = useState(incidenciaSeleccionada?.titulo || '');
   const [descripcion, setDescripcion] = useState(incidenciaSeleccionada?.descripcion || '');
   const [observaciones, setObservaciones] = useState(incidenciaSeleccionada?.observaciones || '');
-  const [fechaDeteccion, setFechaDeteccion] = useState(
-    incidenciaSeleccionada?.fecha_deteccion 
-      ? new Date(incidenciaSeleccionada.fecha_deteccion).toISOString().split('T')[0] 
-      : new Date().toISOString().split('T')[0]
-  );
+  const [fechaDeteccion, setFechaDeteccion] = useState(incidenciaSeleccionada?.fecha_deteccion || new Date().toISOString().split('T')[0]);
   const [fechaLimite, setFechaLimite] = useState(incidenciaSeleccionada?.fecha_limite || '');
   const [responsableId, setResponsableId] = useState<number | ''>(incidenciaSeleccionada?.responsable_id || '');
+  const [actividadId, setActividadId] = useState<number | ''>(incidenciaSeleccionada?.actividad_id || '');
   const [estado, setEstado] = useState<EstadoIncidencia>(incidenciaSeleccionada?.estado || EstadoIncidencia.NUEVA);
   const [archivos, setArchivos] = useState<File[]>([]);
   
   const [miembros, setMiembros] = useState<MiembroEquipoOut[]>([]);
+  const [actividades, setActividades] = useState<ActividadCronograma[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingMiembros, setLoadingMiembros] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -45,18 +44,22 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
   };
 
   useEffect(() => {
-    const fetchMiembros = async () => {
+    const fetchData = async () => {
       try {
-        const resumen = await equipoApi.obtenerResumen();
+        const [resumen, crono] = await Promise.all([
+          equipoApi.obtenerResumen(),
+          cronogramaApi.listarPorObra(obraId)
+        ]);
         setMiembros(resumen.miembros.filter(m => m.is_active));
+        setActividades(crono);
       } catch (error) {
-        console.error("Error cargando equipo", error);
+        console.error("Error cargando datos", error);
       } finally {
-        setLoadingMiembros(false);
+        setLoadingData(false);
       }
     };
-    fetchMiembros();
-  }, []);
+    fetchData();
+  }, [obraId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +75,7 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
           fecha_deteccion: fechaDeteccion,
           fecha_limite: fechaLimite || null,
           responsable_id: responsableId === '' ? null : Number(responsableId),
+          actividad_id: actividadId === '' ? null : Number(actividadId),
           estado,
           archivos
         };
@@ -85,6 +89,7 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
           fecha_deteccion: fechaDeteccion,
           fecha_limite: fechaLimite || null,
           responsable_id: responsableId === '' ? null : Number(responsableId),
+          actividad_id: actividadId === '' ? null : Number(actividadId),
           estado,
           archivos
         };
@@ -151,7 +156,7 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
               <Dropdown
                 value={responsableId.toString()}
                 onChange={(val) => setResponsableId(val === '' ? '' : Number(val))}
-                disabled={loadingMiembros}
+                disabled={loadingData}
                 placeholder="Sin asignar"
                 fullWidth
                 options={[
@@ -162,7 +167,26 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
             </div>
           </div>
           
-          {incidenciaSeleccionada && (
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">Actividad de Cronograma</label>
+            <div className="relative z-20">
+              <Dropdown
+                value={actividadId.toString()}
+                onChange={(val) => setActividadId(val === '' ? '' : Number(val))}
+                disabled={loadingData}
+                placeholder="Sin vincular"
+                fullWidth
+                options={[
+                  { value: '', label: 'Ninguna' },
+                  ...actividades.map(a => ({ value: a.id.toString(), label: `${a.es_hito ? '◆' : '▪'} ${a.nombre}` }))
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+
+        {incidenciaSeleccionada && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Estado</label>
               <div className="relative z-20">
@@ -179,8 +203,8 @@ export function FormIncidenciaInline({ obraId, visitaId, incidenciaSeleccionada,
                 />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div>
           <textarea 

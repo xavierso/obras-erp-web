@@ -3,8 +3,12 @@ import { apiClient, ApiException } from './apiClient';
 export interface PerfilEmpresa {
   id: number;
   nombre_empresa: string;
-  logo_url?: string;
+  logo_url: string | null;
   color_principal: string;
+  direccion: string | null;
+  telefono: string | null;
+  correo: string | null;
+  cif: string | null;
 }
 
 export const perfilApi = {
@@ -18,11 +22,23 @@ export const perfilApi = {
     }
   },
 
-  actualizar: async (nombreEmpresa: string, colorPrincipal: string, logo?: File): Promise<PerfilEmpresa> => {
+  actualizar: async (
+    nombreEmpresa: string, 
+    colorPrincipal: string, 
+    direccion: string,
+    telefono: string,
+    correo: string,
+    cif: string,
+    logo?: File
+  ): Promise<PerfilEmpresa> => {
     try {
       const formData = new FormData();
       formData.append('nombre_empresa', nombreEmpresa);
       formData.append('color_principal', colorPrincipal);
+      formData.append('direccion', direccion);
+      formData.append('telefono', telefono);
+      formData.append('correo', correo);
+      formData.append('cif', cif);
       
       if (logo) {
         formData.append('logo', logo);

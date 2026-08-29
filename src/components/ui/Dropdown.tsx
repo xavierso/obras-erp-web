@@ -32,17 +32,19 @@ export const Dropdown: React.FC<DropdownProps> = ({ value, options, onChange, pl
   }, []);
 
   return (
-    <div className={`relative ${fullWidth ? 'w-full' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`} ref={containerRef}>
+    <div className={`relative ${fullWidth ? 'w-full' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} h-full`} ref={containerRef}>
       <button 
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`bg-transparent border border-accent rounded-xl px-4 py-2 text-sm text-accent font-medium flex items-center justify-between gap-3 min-w-[140px] md:min-w-[180px] focus:outline-none ${fullWidth ? 'w-full' : ''} ${disabled ? 'cursor-not-allowed' : ''}`}
+        className={`bg-accent/10 border border-accent/30 hover:bg-accent/20 transition-colors rounded-xl px-4 py-2 h-full text-sm text-accent font-semibold flex items-center justify-between gap-3 min-w-[140px] md:min-w-[180px] focus:outline-none ${fullWidth ? 'w-full' : ''} ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
-        <svg className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        {!disabled && (
+          <svg className={`w-4 h-4 text-accent transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </button>
 
       {isOpen && (

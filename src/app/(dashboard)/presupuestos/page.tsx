@@ -105,7 +105,8 @@ export default function PresupuestosGlobalPage() {
               await presupuestosApi.cambiarEstado(id, newState);
               // toast.success("Estado actualizado");
             } catch(e) {
-              // toast.error("Error al actualizar estado");
+              console.error('Error al actualizar estado en Kanban:', e);
+              alert(`Error al cambiar estado: ${e instanceof Error ? e.message : 'Error desconocido'}`);
               cargarPresupuestos(); // Revert on error
             }
           }}

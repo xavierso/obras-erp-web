@@ -62,8 +62,10 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
         await presupuestosApi.cambiarEstado(presupuestoId, nuevoEstado as any);
       }
       await cargarPresupuesto();
-    } catch (e) {
-      alert("Error al cambiar estado");
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : 'Error desconocido';
+      console.error('Error al cambiar estado:', e);
+      alert(`Error al cambiar estado: ${errorMsg}`);
     } finally {
       setSaving(false);
     }

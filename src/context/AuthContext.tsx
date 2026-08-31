@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      require('drag-drop-touch');
+    }
+
     const initAuth = async () => {
       const token = Cookies.get('token');
       if (token) {

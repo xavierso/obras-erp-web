@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Visita, VisitaArchivo } from '@/lib/visitasApi';
 
 interface GaleriaVisitasProps {
@@ -60,7 +61,7 @@ export function GaleriaVisitas({ visitas }: GaleriaVisitasProps) {
       </div>
 
       {/* Lightbox Modal */}
-      {selectedFoto && (
+      {selectedFoto && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
           <button 
             className="absolute top-12 right-4 md:top-6 md:right-6 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all z-[110]"
@@ -82,7 +83,8 @@ export function GaleriaVisitas({ visitas }: GaleriaVisitasProps) {
               <p className="text-text-muted text-sm">{selectedFoto.nombre}</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

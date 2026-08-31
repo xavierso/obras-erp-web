@@ -83,15 +83,18 @@ export default function DashboardCharts({ presupuestos, obras }: DashboardCharts
     let activas = 0;
     let pausadas = 0;
     let finalizadas = 0;
+    let pendientes = 0;
 
     obras.forEach(o => {
       if (['en_ejecucion'].includes(o.estado || '')) activas++;
       else if (['en_pausa'].includes(o.estado || '')) pausadas++;
-      else if (['finalizada', 'entregada'].includes(o.estado || '')) finalizadas++;
+      else if (['finalizada', 'entregada', 'archivada'].includes(o.estado || '')) finalizadas++;
+      else if (['pendiente'].includes(o.estado || '')) pendientes++;
     });
 
     return [
       { name: 'En Ejecución', value: activas, color: COLORS.obrasActivas },
+      { name: 'Pendientes', value: pendientes, color: COLORS.pendiente },
       { name: 'En Pausa', value: pausadas, color: COLORS.obrasPausadas },
       { name: 'Finalizadas', value: finalizadas, color: COLORS.ganado },
     ];

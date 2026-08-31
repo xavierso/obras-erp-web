@@ -10,6 +10,7 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import { 
   Briefcase, 
   MapPin, 
@@ -173,6 +174,9 @@ export default function HomePage() {
           </GlassCard>
         </div>
       )}
+
+      {/* DASHBOARD CHARTS */}
+      <DashboardCharts presupuestos={presupuestos} obras={obrasRecientes} />
 
       {/* AVANCE DE OBRAS SECTION */}
       {resumen && resumen.obras_avance.length > 0 && (

@@ -16,6 +16,7 @@ export interface ActividadCronograma {
   prioridad: string | null;
   observaciones: string | null;
   es_hito: boolean;
+  predecesoras_ids: number[];
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +29,7 @@ export interface ActividadCronogramaCreate {
   porcentaje_avance?: number;
   estado_base?: EstadoActividad;
   es_hito?: boolean;
+  predecesoras_ids?: number[];
 }
 
 export interface ActividadCronogramaUpdate {
@@ -39,6 +41,7 @@ export interface ActividadCronogramaUpdate {
   estado_base?: EstadoActividad;
   responsable_id?: number | null;
   es_hito?: boolean;
+  predecesoras_ids?: number[];
 }
 
 export const cronogramaApi = {

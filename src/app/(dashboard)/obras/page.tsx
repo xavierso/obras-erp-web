@@ -6,27 +6,31 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { isUserAdmin, isUserDirector } from '@/lib/authApi';
+import { KanbanObras } from '@/components/obras/KanbanObras';
+import { toast } from 'react-hot-toast';
 
 export default function ObrasPage() {
   const { user } = useAuth();
   const [obras, setObras] = useState<Obra[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
 
   useEffect(() => {
-    const fetchObras = async () => {
-      try {
-        const data = await obrasApi.listar();
-        setObras(data);
-      } catch (err) {
-        const error = err as Error;
-        setError(error.message || 'Error al cargar las obras');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchObras();
   }, []);
+
+  const fetchObras = async () => {
+    try {
+      const data = await obrasApi.listar();
+      setObras(data);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Error al cargar las obras');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getEstadoColor = (estado: EstadoObra) => {
     switch (estado) {
@@ -43,18 +47,57 @@ export default function ObrasPage() {
     }
   };
 
+  const handleEstadoChange = async (obraId: number, nuevoEstado: EstadoObra) => {
+    try {
+      // Optimistic update
+      setObras(prev => prev.map(o => o.id === obraId ? { ...o, estado: nuevoEstado } : o));
+      await obrasApi.cambiarEstado(obraId, nuevoEstado);
+      toast.success('Estado de la obra actualizado');
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al actualizar el estado');
+      fetchObras(); // revert
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-main">Mis Obras</h1>
           <p className="text-text-muted text-sm">Gestiona tus proyectos activos</p>
         </div>
-        {(isUserAdmin(user) || isUserDirector(user)) && (
-          <Link href="/obras/nuevo">
-            <Button className="px-6">Nueva Obra</Button>
-          </Link>
-        )}
+        
+        <div className="flex items-center gap-4">
+          <div className="flex bg-surface/30 p-1 rounded-lg border border-white/5">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                viewMode === 'grid' 
+                  ? 'bg-brand-blue text-white shadow-sm' 
+                  : 'text-text-muted hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                viewMode === 'kanban' 
+                  ? 'bg-brand-blue text-white shadow-sm' 
+                  : 'text-text-muted hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Kanban
+            </button>
+          </div>
+
+          {(isUserAdmin(user) || isUserDirector(user)) && (
+            <Link href="/obras/nuevo">
+              <Button className="px-6">Nueva Obra</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -84,7 +127,7 @@ export default function ObrasPage() {
             </Link>
           )}
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {obras.map((obra) => (
             <Link key={obra.id} href={`/obras/${obra.id}`}>
@@ -129,6 +172,8 @@ export default function ObrasPage() {
             </Link>
           ))}
         </div>
+      ) : (
+        <KanbanObras obras={obras} onEstadoChange={handleEstadoChange} />
       )}
     </div>
   );

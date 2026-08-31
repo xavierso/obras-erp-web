@@ -1,0 +1,22 @@
+{
+  "name": "DIAM ERP",
+  "short_name": "DIAM",
+  "description": "Gestión de Obras y Presupuestos",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#02203C",
+  "theme_color": "#02203C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-diam.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-diam.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

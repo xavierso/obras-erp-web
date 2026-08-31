@@ -11,6 +11,19 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "DIAM | Gestión Inteligente de Obras",
   description: "Plataforma para gestionar obras de construcción y proyectos.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DIAM ERP",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  themeColor: "#02203C",
 };
 
 import { Toaster } from 'react-hot-toast';

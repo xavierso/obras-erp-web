@@ -147,5 +147,37 @@ export const presupuestosApi = {
   borrarPartida: async (partidaId: number): Promise<{message: string}> => {
     const response = await apiClient.delete(`/presupuestos/partidas/${partidaId}`);
     return response.data;
+  },
+  
+  exportarExcel: async (): Promise<void> => {
+    const response = await apiClient.get('/exportar/excel', { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    const disposition = response.headers['content-disposition'];
+    let filename = 'Exportacion.xlsx';
+    if (disposition && disposition.includes('filename="')) {
+      filename = disposition.split('filename="')[1].split('"')[0];
+    }
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    a.parentNode?.removeChild(a);
+  },
+
+  exportarPresupuestoExcel: async (id: number): Promise<void> => {
+    const response = await apiClient.get(`/exportar/excel/presupuesto/${id}`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    const disposition = response.headers['content-disposition'];
+    let filename = `Presupuesto_${id}.xlsx`;
+    if (disposition && disposition.includes('filename="')) {
+      filename = disposition.split('filename="')[1].split('"')[0];
+    }
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    a.parentNode?.removeChild(a);
   }
 };

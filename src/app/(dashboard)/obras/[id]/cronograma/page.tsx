@@ -8,7 +8,8 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { isUserAdmin, isUserDirector } from '@/lib/authApi';
-import { Pencil, Trash2 } from 'lucide-react';
+import { AdvancedGantt } from '@/components/cronograma/AdvancedGantt';
+import { toast } from 'react-hot-toast';
 
 export default function CronogramaPage() {
   const params = useParams();
@@ -16,6 +17,7 @@ export default function CronogramaPage() {
   const obraId = parseInt(params.id as string, 10);
   const { user } = useAuth();
   const canDelete = isUserAdmin(user) || isUserDirector(user);
+  const canEdit = canDelete; // simplificación
 
   const [obra, setObra] = useState<Obra | null>(null);
   const [actividades, setActividades] = useState<ActividadCronograma[]>([]);
@@ -79,6 +81,7 @@ export default function CronogramaPage() {
           porcentaje_avance: formAvance,
           es_hito: formEsHito,
         });
+        toast.success('Actividad actualizada');
       } else {
         await cronogramaApi.crear({
           obra_id: obraId,
@@ -88,12 +91,13 @@ export default function CronogramaPage() {
           porcentaje_avance: formAvance,
           es_hito: formEsHito,
         });
+        toast.success('Actividad creada');
       }
       setIsFormOpen(false);
       fetchData();
     } catch (e) {
       console.error(e);
-      alert('Error al guardar la actividad');
+      toast.error('Error al guardar la actividad');
     }
   };
 
@@ -101,20 +105,60 @@ export default function CronogramaPage() {
     if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) return;
     try {
       await cronogramaApi.eliminar(id);
+      toast.success('Actividad eliminada');
       fetchData();
     } catch (e) {
       console.error(e);
-      alert('Error al eliminar la actividad');
+      toast.error('Error al eliminar la actividad');
     }
   };
 
-  const getStatusColor = (estado: EstadoActividad) => {
-    switch (estado) {
-      case 'completada': return 'bg-green-500';
-      case 'en_ejecucion': return 'bg-blue-500';
-      case 'retrasada': return 'bg-red-500';
-      case 'cancelada': return 'bg-gray-800';
-      default: return 'bg-gray-400';
+  const handleUpdateFechas = async (id: number, inicio: string, fin: string) => {
+    try {
+      // Optistic UI update
+      setActividades(prev => prev.map(a => a.id === id ? { ...a, fecha_inicio: inicio, fecha_fin_prevista: fin } : a));
+      
+      await cronogramaApi.actualizar(id, {
+        fecha_inicio: inicio,
+        fecha_fin_prevista: fin
+      });
+      toast.success('Fechas actualizadas');
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al actualizar las fechas');
+      fetchData(); // revert
+    }
+  };
+
+  const handleAddDependency = async (fromId: number, toId: number) => {
+    const toAct = actividades.find(a => a.id === toId);
+    if (!toAct) return;
+    
+    // Evitar duplicados
+    if (toAct.predecesoras_ids?.includes(fromId)) {
+      toast.error('La dependencia ya existe');
+      return;
+    }
+    
+    // Evitar ciclo básico
+    if (fromId === toId) return;
+
+    try {
+      const newPredecesoras = [...(toAct.predecesoras_ids || []), fromId];
+      
+      // Optistic UI update
+      setActividades(prev => prev.map(a => a.id === toId ? { ...a, predecesoras_ids: newPredecesoras } : a));
+      
+      await cronogramaApi.actualizar(toId, {
+        predecesoras_ids: newPredecesoras
+      });
+      toast.success('Dependencia añadida');
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al crear la dependencia');
+      fetchData(); // revert
     }
   };
 
@@ -145,9 +189,11 @@ export default function CronogramaPage() {
             <p className="text-text-muted text-sm font-mono mt-1">{obra.codigo}</p>
           </div>
         </div>
-        <Button onClick={() => openForm()} fullWidth={false} className="!min-h-[40px] px-5 py-2">
-          + Nueva Actividad
-        </Button>
+        {canEdit && (
+          <Button onClick={() => openForm()} fullWidth={false} className="!min-h-[40px] px-5 py-2">
+            + Nueva Actividad
+          </Button>
+        )}
       </div>
 
       {/* Resumen Superior */}
@@ -175,182 +221,25 @@ export default function CronogramaPage() {
       </div>
 
       {/* Gantt Visual View */}
-      <GlassCard padding="p-0" className="overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-text-main">Diagrama de Gantt</h2>
+      <GlassCard padding="p-0" className="overflow-hidden relative z-0">
+        <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+          <div>
+            <h2 className="text-lg font-bold text-text-main">Diagrama de Gantt</h2>
+            <p className="text-xs text-text-muted mt-1">Arrastra las barras para mover o redimensionar. Arrastra desde el círculo derecho de una barra hacia otra para crear dependencias.</p>
+          </div>
         </div>
         
         {actividades.length === 0 ? (
-          <div className="p-6 text-text-muted">No hay actividades aún.</div>
+          <div className="p-6 text-text-muted text-center">No hay actividades aún.</div>
         ) : (
-          (() => {
-            const parseDate = (d: string) => new Date(d);
-            let minDate = new Date();
-            let maxDate = new Date();
-
-            if (actividades.length > 0) {
-              minDate = new Date(Math.min(...actividades.map(a => parseDate(a.fecha_inicio).getTime())));
-              maxDate = new Date(Math.max(...actividades.map(a => parseDate(a.fecha_fin_prevista).getTime())));
-            }
-
-            // Buffer de días
-            minDate.setDate(minDate.getDate() - 2);
-            maxDate.setDate(maxDate.getDate() + 4);
-            
-            // Garantizar mínimo de 14 días
-            const diffDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays < 14) {
-              maxDate.setDate(maxDate.getDate() + (14 - diffDays));
-            }
-
-            const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
-            const daysArray = Array.from({length: totalDays + 1}, (_, i) => {
-              const d = new Date(minDate);
-              d.setDate(d.getDate() + i);
-              return d;
-            });
-
-            // Agrupar por meses para la cabecera
-            const months: { monthName: string; span: number }[] = [];
-            let currentMonth = -1;
-            let currentMonthSpan = 0;
-            
-            daysArray.forEach((d, index) => {
-              if (d.getMonth() !== currentMonth) {
-                if (currentMonth !== -1) {
-                  months.push({ monthName: daysArray[index-1].toLocaleString('es-ES', { month: 'long', year: 'numeric' }), span: currentMonthSpan });
-                }
-                currentMonth = d.getMonth();
-                currentMonthSpan = 1;
-              } else {
-                currentMonthSpan++;
-              }
-              if (index === daysArray.length - 1) {
-                months.push({ monthName: d.toLocaleString('es-ES', { month: 'long', year: 'numeric' }), span: currentMonthSpan });
-              }
-            });
-
-            return (
-              <div className="overflow-x-auto custom-scrollbar pb-6">
-                <div className="min-w-max">
-                  {/* Grid Layout Principal */}
-                  <div 
-                    className="grid border-b border-white/5" 
-                    style={{ gridTemplateColumns: `260px repeat(${daysArray.length}, minmax(36px, 1fr))` }}
-                  >
-                    {/* Header: Meses */}
-                    <div className="bg-surface/50 border-r border-white/10 p-3 font-semibold text-text-muted text-xs uppercase tracking-wider flex items-end">
-                      Actividad
-                    </div>
-                    {months.map((m, i) => (
-                      <div 
-                        key={i} 
-                        className="bg-surface/50 border-r border-white/5 p-2 font-semibold text-text-main text-xs uppercase text-center truncate"
-                        style={{ gridColumn: `span ${m.span}` }}
-                      >
-                        {m.monthName}
-                      </div>
-                    ))}
-                    
-                    {/* Header: Días */}
-                    <div className="border-r border-white/10 bg-surface/30"></div>
-                    {daysArray.map((d, i) => (
-                      <div 
-                        key={i} 
-                        className={`text-center py-2 text-xs border-r border-white/5 bg-surface/30 ${d.getDay() === 0 || d.getDay() === 6 ? 'bg-white/5 text-text-muted' : 'text-text-main'}`}
-                      >
-                        <div className="font-bold">{d.getDate()}</div>
-                        <div className="text-[9px] opacity-70">{d.toLocaleString('es-ES', { weekday: 'short' }).charAt(0)}</div>
-                      </div>
-                    ))}
-
-                    {/* Filas de Actividades */}
-                    {actividades.map(act => {
-                      const start = parseDate(act.fecha_inicio);
-                      const end = parseDate(act.fecha_fin_prevista);
-                      
-                      const startOffset = Math.ceil((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
-                      const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 to include end day
-
-                      return (
-                        <React.Fragment key={act.id}>
-                          {/* Columna de nombre y acciones */}
-                          <div className="border-r border-b border-white/10 p-3 flex items-center justify-between group bg-surface/20 hover:bg-surface/50 transition-colors">
-                            <div className="overflow-hidden">
-                              <div className="font-semibold text-sm text-text-main truncate" title={act.nombre}>{act.nombre}</div>
-                              <div className="flex items-center mt-1 space-x-2">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase text-white ${getStatusColor(act.estado)}`}>
-                                  {act.estado.replace('_', ' ')}
-                                </span>
-                                {act.es_hito && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border border-brand-blue text-brand-blue">
-                                    Hito
-                                  </span>
-                                )}
-                                {!act.es_hito && <span className="text-[10px] text-text-muted font-mono">{act.porcentaje_avance}%</span>}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
-                              <button onClick={() => openForm(act)} className="p-1 text-text-muted hover:text-brand-blue" title="Editar">
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              {canDelete && (
-                                <button onClick={() => handleDelete(act.id)} className="p-1 text-text-muted hover:text-error" title="Eliminar">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* Celdas del grid (fondo) */}
-                          <div 
-                            className="border-b border-white/5 relative bg-surface/10 hover:bg-surface/30 transition-colors flex items-center" 
-                            style={{ gridColumn: `2 / span ${daysArray.length}` }}
-                          >
-                            {/* Líneas de fin de semana en el fondo (opcional, simplificado) */}
-                            {/* Renderizar Hito o Barra Normal */}
-                            {act.es_hito ? (
-                              <div 
-                                className="absolute flex items-center group/hito"
-                                style={{ 
-                                  left: `calc((${startOffset} / ${daysArray.length}) * 100%)`, 
-                                  marginLeft: '-6px' 
-                                }}
-                              >
-                                <div className={`w-4 h-4 rotate-45 ${getStatusColor(act.estado)} shadow-md border-2 border-surface/50 z-20`}></div>
-                                <span className="ml-3 text-[10px] font-bold text-text-main opacity-0 group-hover/hito:opacity-100 transition-opacity whitespace-nowrap z-30 drop-shadow-md">
-                                  {act.nombre}
-                                </span>
-                              </div>
-                            ) : (
-                              <div 
-                                className={`absolute h-7 rounded-md ${getStatusColor(act.estado)} opacity-90 shadow-sm flex items-center overflow-hidden`}
-                                style={{ 
-                                  left: `calc((${startOffset} / ${daysArray.length}) * 100%)`, 
-                                  width: `calc((${duration} / ${daysArray.length}) * 100%)`,
-                                  minWidth: '4px'
-                                }}
-                              >
-                                {/* Relleno de porcentaje dentro de la barra */}
-                                <div 
-                                  className="absolute top-0 left-0 h-full bg-white/30"
-                                  style={{ width: `${act.porcentaje_avance}%` }}
-                                />
-                                <span className="relative z-10 text-[10px] font-bold text-white px-2 truncate mix-blend-overlay">
-                                  {act.nombre}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })()
+          <AdvancedGantt 
+            actividades={actividades}
+            canEdit={canEdit}
+            onEdit={openForm}
+            onDelete={handleDelete}
+            onUpdateFechas={handleUpdateFechas}
+            onAddDependency={handleAddDependency}
+          />
         )}
       </GlassCard>
 

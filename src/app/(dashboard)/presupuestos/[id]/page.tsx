@@ -288,25 +288,10 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => router.push(`/presupuestos/${presupuestoId}/certificaciones`)}
-            variant="outlined" 
-            className="text-text-main border-white/20 hover:bg-white/10 !min-h-0 h-[40px] py-0"
-          >
-            📋 Certificaciones
-          </Button>
-
-          <Button 
-            onClick={() => window.open(`/pdf/presupuesto/${presupuestoId}`, '_blank')}
-            variant="outlined" 
-            className="text-text-main border-white/20 hover:bg-white/10 !min-h-0 h-[40px] py-0"
-          >
-            📄 PDF
-          </Button>
-
+        <div className="flex justify-end mt-2 md:mt-0 w-full md:w-56 relative z-50">
           <Dropdown
             value={presupuesto.estado}
+            fullWidth
             options={[
               { value: 'borrador', label: 'Borrador' },
               { value: 'enviado', label: 'Enviado al Cliente' },
@@ -319,13 +304,6 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
             onChange={(val) => handleChangeEstado(val)}
             disabled={saving}
           />
-          
-          {(presupuesto.estado === 'aprobado' || presupuesto.estado === 'en_ejecucion') && (
-            <Button onClick={handleGenerarCronograma} variant="outlined" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10">
-              <Calendar className="w-4 h-4 mr-2" />
-              {presupuesto.estado === 'aprobado' ? 'Pasar a Cronograma / Ejecución' : 'Actualizar Cronograma'}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -413,6 +391,53 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
           </div>
         </GlassCard>
       </div>
+
+      <GlassCard padding="p-5">
+        <h3 className="font-semibold text-text-main mb-4">Herramientas del Presupuesto</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button 
+            onClick={async () => {
+              try {
+                await presupuestosApi.exportarPresupuestoExcel(presupuestoId);
+              } catch(e) {
+                alert("Error al exportar a Excel");
+              }
+            }}
+            className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group"
+          >
+            <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">📊</span>
+            <span className="text-xs font-semibold text-text-main">Excel</span>
+          </button>
+          
+          <button 
+            onClick={() => router.push(`/presupuestos/${presupuestoId}/certificaciones`)}
+            className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group"
+          >
+            <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">📋</span>
+            <span className="text-xs font-semibold text-text-main">Certificaciones</span>
+          </button>
+
+          <button 
+            onClick={() => window.open(`/pdf/presupuesto/${presupuestoId}`, '_blank')}
+            className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group"
+          >
+            <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">📄</span>
+            <span className="text-xs font-semibold text-text-main">PDF</span>
+          </button>
+
+          {(presupuesto.estado === 'aprobado' || presupuesto.estado === 'en_ejecucion') && (
+            <button 
+              onClick={handleGenerarCronograma} 
+              className="flex flex-col items-center justify-center p-4 bg-accent/10 hover:bg-accent/20 border border-accent/30 hover:border-accent/50 rounded-xl transition-all group"
+            >
+              <Calendar className="w-6 h-6 mb-2 text-accent group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-semibold text-accent text-center">
+                {presupuesto.estado === 'aprobado' ? 'Pasar a Cronograma' : 'Act. Cronograma'}
+              </span>
+            </button>
+          )}
+        </div>
+      </GlassCard>
 
       <GlassCard padding="p-6">
         <div className="flex justify-between items-center mb-6">

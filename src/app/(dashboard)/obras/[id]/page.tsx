@@ -20,6 +20,7 @@ import { isUserLector, isUserAdmin, isUserDirector } from '@/lib/authApi';
 import { ModalInformeObra } from '@/components/informes/ModalInformeObra';
 import { documentosApi, Documento } from '@/lib/documentosApi';
 import { ListaDocumentos } from '@/components/documentos/ListaDocumentos';
+import { GaleriaVisitas } from '@/components/visitas/GaleriaVisitas';
 
 export default function ObraDetailPage() {
   const { user } = useAuth();
@@ -323,7 +324,15 @@ export default function ObraDetailPage() {
           </GlassCard>
         </div>
 
-        {/* ROW 4: Documentos */}
+        {/* ROW 4: Galería Fotográfica */}
+        <div className="lg:col-span-3 h-full">
+          <GlassCard padding="p-5" className="h-full">
+            <h3 className="font-semibold text-text-main mb-4">Galería Fotográfica</h3>
+            <GaleriaVisitas visitas={visitas} />
+          </GlassCard>
+        </div>
+
+        {/* ROW 5: Documentos */}
         <div className="lg:col-span-3 h-full">
           <GlassCard padding="p-5" className="h-full">
             <ListaDocumentos 

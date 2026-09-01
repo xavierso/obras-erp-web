@@ -112,7 +112,7 @@ export const presupuestosApi = {
   },
 
   cambiarEstado: async (id: number, estado: EstadoPresupuesto): Promise<Presupuesto> => {
-    const response = await apiClient.put(`/presupuestos/${id}/estado`, { estado });
+    const response = await apiClient.post(`/presupuestos/${id}/estado`, { estado });
     return response.data;
   },
 

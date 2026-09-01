@@ -63,9 +63,11 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       }
       await cargarPresupuesto();
     } catch (e: unknown) {
-      const errorMsg = e instanceof Error ? e.message : 'Error desconocido';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const axiosErr = e as any;
+      const detail = axiosErr?.response?.data?.detail || axiosErr?.message || 'Error desconocido';
       console.error('Error al cambiar estado:', e);
-      alert(`Error al cambiar estado: ${errorMsg}`);
+      alert(`Error al cambiar estado: ${detail}`);
     } finally {
       setSaving(false);
     }

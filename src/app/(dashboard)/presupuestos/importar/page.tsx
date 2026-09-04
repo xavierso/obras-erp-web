@@ -431,7 +431,7 @@ export default function ImportarPresupuestoPage() {
               >
                 {saving ? 'Guardando...' : 'Guardar en Base de Datos'}
               </Button>
-              <Button variant="ghost" onClick={() => setStep(2)} disabled={saving}>
+              <Button variant="text" onClick={() => setStep(2)} disabled={saving}>
                 Revisar de nuevo
               </Button>
             </div>

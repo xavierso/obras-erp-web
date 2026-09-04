@@ -132,24 +132,47 @@ export default function PresupuestoPdfPage() {
 
                 {/* PARTIDAS DEL CAPÍTULO */}
                 {cap.partidas?.map((partida) => (
-                  <tr key={partida.id} className="border-b border-gray-100 no-break">
-                    <td className="py-3 px-3 text-gray-500 font-mono text-xs align-top">{partida.codigo}</td>
-                    <td className="py-3 px-3 align-top">
-                      <p className="font-semibold text-gray-800">{partida.descripcion}</p>
-                      {partida.observaciones && (
-                        <p className="mt-1 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">{partida.observaciones}</p>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-center align-top text-gray-700">
-                      {partida.cantidad} <span className="text-[10px] text-gray-500">{partida.unidad}</span>
-                    </td>
-                    <td className="py-3 px-3 text-right align-top text-gray-700">
-                      {partida.precio_unitario?.toLocaleString('es-ES', {minimumFractionDigits: 2})} €
-                    </td>
-                    <td className="py-3 px-3 text-right font-semibold align-top text-gray-900">
-                      {partida.importe?.toLocaleString('es-ES', {minimumFractionDigits: 2})} €
-                    </td>
-                  </tr>
+                  <React.Fragment key={partida.id}>
+                    <tr className="border-b border-gray-100 no-break">
+                      <td className="py-3 px-3 text-gray-500 font-mono text-xs align-top">{partida.codigo}</td>
+                      <td className="py-3 px-3 align-top">
+                        <p className="font-semibold text-gray-800">{partida.descripcion}</p>
+                        {partida.observaciones && (
+                          <p className="mt-1 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">{partida.observaciones}</p>
+                        )}
+                        {/* LINEAS DE MEDICION IN PDF */}
+                        {partida.lineas_medicion && partida.lineas_medicion.length > 0 && (
+                          <div className="mt-3 w-full bg-gray-50 p-2 rounded text-[10px]">
+                            <div className="grid grid-cols-6 gap-2 mb-1 text-gray-500 font-semibold border-b border-gray-200 pb-1">
+                              <div className="col-span-2">Comentario</div>
+                              <div className="text-right">N (Uds)</div>
+                              <div className="text-right">Long.</div>
+                              <div className="text-right">Anch.</div>
+                              <div className="text-right">Alt.</div>
+                            </div>
+                            {partida.lineas_medicion.map((linea, idx) => (
+                              <div key={idx} className="grid grid-cols-6 gap-2 text-gray-600 py-0.5">
+                                <div className="col-span-2 truncate">{linea.comentario || '-'}</div>
+                                <div className="text-right">{linea.unidades ?? ''}</div>
+                                <div className="text-right">{linea.longitud ?? ''}</div>
+                                <div className="text-right">{linea.anchura ?? ''}</div>
+                                <div className="text-right">{linea.altura ?? ''}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-center align-top text-gray-700">
+                        {partida.cantidad_calculada ?? partida.cantidad} <span className="text-[10px] text-gray-500">{partida.unidad}</span>
+                      </td>
+                      <td className="py-3 px-3 text-right align-top text-gray-700">
+                        {partida.precio_unitario?.toLocaleString('es-ES', {minimumFractionDigits: 2})} €
+                      </td>
+                      <td className="py-3 px-3 text-right font-semibold align-top text-gray-900">
+                        {partida.importe?.toLocaleString('es-ES', {minimumFractionDigits: 2})} €
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 ))}
 
                 {/* SUBTOTAL CAPÍTULO */}

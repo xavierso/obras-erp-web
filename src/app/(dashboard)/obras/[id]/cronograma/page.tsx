@@ -31,6 +31,7 @@ export default function CronogramaPage() {
   const [formFin, setFormFin] = useState('');
   const [formAvance, setFormAvance] = useState(0);
   const [formEsHito, setFormEsHito] = useState(false);
+  const [formEstado, setFormEstado] = useState<EstadoActividad>('no_iniciada');
 
   useEffect(() => {
     fetchData();
@@ -59,6 +60,7 @@ export default function CronogramaPage() {
       setFormFin(act.fecha_fin_prevista);
       setFormAvance(act.porcentaje_avance);
       setFormEsHito(act.es_hito || false);
+      setFormEstado(act.estado_base || 'no_iniciada');
     } else {
       setEditingId(null);
       setFormNombre('');
@@ -66,6 +68,7 @@ export default function CronogramaPage() {
       setFormFin('');
       setFormAvance(0);
       setFormEsHito(false);
+      setFormEstado('no_iniciada');
     }
     setIsFormOpen(true);
   };
@@ -80,6 +83,7 @@ export default function CronogramaPage() {
           fecha_fin_prevista: formFin,
           porcentaje_avance: formAvance,
           es_hito: formEsHito,
+          estado_base: formEstado,
         });
         toast.success('Actividad actualizada');
       } else {
@@ -90,6 +94,7 @@ export default function CronogramaPage() {
           fecha_fin_prevista: formFin,
           porcentaje_avance: formAvance,
           es_hito: formEsHito,
+          estado_base: formEstado,
         });
         toast.success('Actividad creada');
       }
@@ -283,6 +288,20 @@ export default function CronogramaPage() {
                 <label htmlFor="es_hito" className="text-sm font-semibold text-text-main cursor-pointer">
                   Marcar como Hito (Milestone)
                 </label>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Estado</label>
+                <select 
+                  className="w-full bg-surface border border-white/10 rounded-lg p-2.5 text-text-main focus:border-brand-blue focus:outline-none transition-colors"
+                  value={formEstado}
+                  onChange={e => setFormEstado(e.target.value as EstadoActividad)}
+                >
+                  <option value="no_iniciada">No Iniciada</option>
+                  <option value="en_ejecucion">En Ejecución</option>
+                  <option value="completada">Completada</option>
+                  <option value="retrasada">Retrasada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
               </div>
               <div className="flex justify-end space-x-3 pt-4 border-t border-white/10 mt-6">
                 <Button variant="text" onClick={() => setIsFormOpen(false)}>Cancelar</Button>

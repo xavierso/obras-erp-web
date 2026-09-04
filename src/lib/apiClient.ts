@@ -20,6 +20,13 @@ apiClient.interceptors.request.use((config) => {
 
 export const getApiUrl = (path: string) => `${API_URL}${path}`;
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    return Promise.reject(ApiException.fromAxiosError(error));
+  }
+);
+
 export class ApiException extends Error {
   statusCode?: number;
 

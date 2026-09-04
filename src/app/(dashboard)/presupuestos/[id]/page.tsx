@@ -8,6 +8,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ArrowLeft, Save, Plus, Check, Trash2, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { LineasMedicionTable } from '@/components/presupuestos/LineasMedicionTable';
 
 export default function PresupuestoEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -64,10 +65,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       await cargarPresupuesto();
     } catch (e: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const axiosErr = e as any;
-      const detail = axiosErr?.response?.data?.detail || axiosErr?.message || 'Error desconocido';
-      console.error('Error al cambiar estado:', e);
-      alert(`Error al cambiar estado: ${detail}`);
+      alert(`Error al cambiar estado: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -84,7 +82,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       cargarPresupuesto();
       alert("Presupuesto aprobado con éxito.");
     } catch (e) {
-      alert("Error al aprobar");
+      alert(`Error al aprobar: ${(e as Error).message}`);
     }
   };
 
@@ -106,9 +104,9 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
           router.push(`/obras/${presupuesto.obra_id}/cronograma`);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Error al generar el cronograma');
+      alert(e.response?.data?.detail || 'Error al generar el cronograma');
     } finally {
       setSaving(false);
     }
@@ -128,7 +126,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       await cargarPresupuesto();
       setShowCapituloModal(false);
     } catch (e) {
-      alert("Error al crear capítulo");
+      alert(`Error al crear capítulo: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -158,7 +156,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       });
       await cargarPresupuesto();
     } catch (e) {
-      alert("Error al crear partida");
+      alert(`Error al crear partida: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -227,6 +225,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       setPresupuesto(data);
     } catch (e) {
       console.error("Error al guardar partida", e);
+      alert(`Error al guardar partida: ${(e as Error).message}`);
     }
   };
 
@@ -237,7 +236,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       await presupuestosApi.borrarCapitulo(capituloId);
       await cargarPresupuesto();
     } catch (e) {
-      alert("Error al borrar capítulo");
+      alert(`Error al borrar capítulo: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -250,7 +249,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
       await presupuestosApi.borrarPartida(partidaId);
       await cargarPresupuesto();
     } catch (e) {
-      alert("Error al borrar partida");
+      alert(`Error al borrar partida: ${(e as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -414,6 +413,14 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
           </button>
           
           <button 
+            onClick={() => router.push(`/presupuestos/importar?target_id=${presupuestoId}`)}
+            className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-accent/50 rounded-xl transition-all group"
+          >
+            <span className="text-2xl mb-2 group-hover:scale-110 transition-transform text-accent">📥</span>
+            <span className="text-xs font-semibold text-text-main text-center">Importar<br/>Excel</span>
+          </button>
+          
+          <button 
             onClick={() => router.push(`/presupuestos/${presupuestoId}/certificaciones`)}
             className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group"
           >
@@ -488,7 +495,6 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                 <th className="p-3 font-semibold text-right w-24">Cantidad</th>
                 <th className="p-3 font-semibold text-center w-16">Unidad</th>
                 <th className="p-3 font-semibold text-right w-28">Venta Ud.</th>
-                <th className="p-3 font-semibold text-right w-24">Desc %</th>
                 <th className="p-3 font-semibold text-right w-32">Importe</th>
               </tr>
             </thead>
@@ -497,7 +503,7 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                 <React.Fragment key={`cap-${capitulo.id}`}>
                   <tr className="bg-brand-navy/30 border-y border-brand-blue/30">
                     <td colSpan={2}></td>
-                    <td className="p-3 font-bold text-brand-blue" colSpan={4}>
+                    <td className="p-3 font-bold text-brand-blue" colSpan={3}>
                       <span className="text-white/50 mr-2">{(indexCapitulo + 1).toString().padStart(2, '0')}</span>
                       {capitulo.nombre}
                     </td>
@@ -542,14 +548,24 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                           />
                         </td>
                         <td className="p-2">
-                          <input 
-                            type="number" 
-                            value={partida.cantidad === 0 ? '' : partida.cantidad} 
-                            onChange={(e) => handleUpdatePartidaLocal(capitulo.id, partida.id, 'cantidad', e.target.value)}
-                            onBlur={() => handleSavePartida(capitulo.id, partida.id)}
-                            disabled={!isBorrador} 
-                            className="w-full bg-transparent text-right border-b border-transparent focus:border-brand-blue outline-none group-hover:bg-white/5 rounded px-1" 
-                          />
+                          {partida.lineas_medicion && partida.lineas_medicion.length > 0 ? (
+                            <input 
+                              type="number" 
+                              value={partida.cantidad_calculada === 0 ? '' : partida.cantidad_calculada} 
+                              disabled={true} 
+                              className="w-full bg-transparent text-right border-b border-transparent text-brand-blue font-semibold outline-none group-hover:bg-white/5 rounded px-1" 
+                              title="Cantidad calculada por líneas de medición"
+                            />
+                          ) : (
+                            <input 
+                              type="number" 
+                              value={partida.cantidad === 0 ? '' : partida.cantidad} 
+                              onChange={(e) => handleUpdatePartidaLocal(capitulo.id, partida.id, 'cantidad', e.target.value)}
+                              onBlur={() => handleSavePartida(capitulo.id, partida.id)}
+                              disabled={!isBorrador} 
+                              className="w-full bg-transparent text-right border-b border-transparent focus:border-brand-blue outline-none group-hover:bg-white/5 rounded px-1" 
+                            />
+                          )}
                         </td>
                         <td className="p-2 text-center text-text-muted">
                           <input 
@@ -572,19 +588,6 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                               className="w-16 bg-transparent text-right text-success font-medium border-b border-transparent focus:border-brand-blue outline-none group-hover:bg-white/5 rounded px-1" 
                             />
                             <span className="text-xs ml-1 text-text-muted">€</span>
-                          </div>
-                        </td>
-                        <td className="p-2">
-                          <div className="flex items-center justify-end">
-                            <input 
-                              type="number" 
-                              value={partida.descuento_porcentaje === 0 ? '' : partida.descuento_porcentaje} 
-                              onChange={(e) => handleUpdatePartidaLocal(capitulo.id, partida.id, 'descuento_porcentaje', e.target.value)}
-                              onBlur={() => handleSavePartida(capitulo.id, partida.id)}
-                              disabled={!isBorrador} 
-                              className="w-12 bg-transparent text-right text-error border-b border-transparent focus:border-brand-blue outline-none group-hover:bg-white/5 rounded px-1" 
-                            />
-                            <span className="text-xs ml-1 text-text-muted">%</span>
                           </div>
                         </td>
                         <td className="p-3 text-right font-semibold bg-white/[0.02] flex items-center justify-end gap-2 h-[42px]">
@@ -660,6 +663,21 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                                 </div>
                               </div>
                               
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[10px] text-text-muted uppercase tracking-wider font-semibold">% Descuento</label>
+                                <div className="flex items-center">
+                                  <input 
+                                    type="number" 
+                                    value={partida.descuento_porcentaje === 0 ? '' : partida.descuento_porcentaje} 
+                                    onChange={(e) => handleUpdatePartidaLocal(capitulo.id, partida.id, 'descuento_porcentaje', e.target.value)}
+                                    onBlur={() => handleSavePartida(capitulo.id, partida.id)}
+                                    disabled={!isBorrador} 
+                                    className="w-16 bg-transparent text-right border-b border-white/20 focus:border-brand-blue outline-none text-error" 
+                                  />
+                                  <span className="text-xs ml-1 text-text-muted">%</span>
+                                </div>
+                              </div>
+                              
                               <div className="ml-auto flex items-center gap-4 bg-brand-navy/30 px-4 py-2 rounded-lg border border-brand-blue/30">
                                 <div className="text-right">
                                   <p className="text-[10px] text-brand-blue uppercase tracking-wider font-semibold">Coste Unitario Calc.</p>
@@ -686,6 +704,42 @@ export default function PresupuestoEditorPage({ params }: { params: Promise<{ id
                                   className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-text-main focus:border-brand-blue focus:outline-none resize-y"
                                 />
                               </div>
+
+                              <LineasMedicionTable
+                                partidaId={partida.id}
+                                isBorrador={isBorrador}
+                                lineasIniciales={partida.lineas_medicion || []}
+                                onLineasChange={async (newLineas) => {
+                                  // Update the local state for this partida's lines
+                                  const newCaps = capitulosLocales.map(cap => {
+                                    if (cap.id !== capitulo.id) return cap;
+                                    const newParts = cap.partidas.map(p => {
+                                      if (p.id !== partida.id) return p;
+                                      const totalCalculado = newLineas.reduce((acc, l) => acc + (l.subtotal || 0), 0);
+                                      const newPartida = {
+                                        ...p,
+                                        lineas_medicion: newLineas,
+                                        cantidad_calculada: totalCalculado > 0 ? totalCalculado : undefined,
+                                        cantidad: totalCalculado > 0 ? totalCalculado : p.cantidad,
+                                      };
+                                      // Recalculate importe
+                                      const desc = 1 - ((newPartida.descuento_porcentaje || 0) / 100);
+                                      newPartida.importe = (newPartida.cantidad || 0) * (newPartida.precio_unitario || 0) * desc;
+                                      newPartida.coste_total = (newPartida.cantidad || 0) * (newPartida.coste_unitario || 0);
+                                      
+                                      // Opt-in sync with backend for the updated quantity
+                                      if (totalCalculado > 0 && totalCalculado !== p.cantidad) {
+                                        presupuestosApi.actualizarPartida(p.id, { cantidad: totalCalculado }).catch(console.error);
+                                      }
+
+                                      return newPartida;
+                                    });
+                                    const subtotal = newParts.reduce((acc, curr) => acc + (curr.importe || 0), 0);
+                                    return { ...cap, partidas: newParts, subtotal };
+                                  });
+                                  setCapitulosLocales(newCaps);
+                                }}
+                              />
                             </div>
                           </td>
                         </tr>

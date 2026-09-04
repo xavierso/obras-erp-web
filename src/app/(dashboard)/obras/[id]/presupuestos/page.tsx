@@ -68,7 +68,7 @@ export default function PresupuestosPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-start md:items-center space-x-4">
-          <button onClick={() => router.push(`/obras/${obraId}`)} className="text-text-muted hover:text-accent transition-colors mt-1 md:mt-0">
+          <button onClick={() => router.back()} className="text-text-muted hover:text-accent transition-colors mt-1 md:mt-0">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>

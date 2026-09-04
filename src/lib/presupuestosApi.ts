@@ -2,6 +2,17 @@ import { apiClient } from './apiClient';
 
 export type EstadoPresupuesto = 'borrador' | 'enviado' | 'pendiente_aprobacion' | 'aprobado' | 'en_ejecucion' | 'finalizado' | 'cancelado';
 
+export interface LineaMedicion {
+  id: number;
+  partida_id?: number;
+  comentario: string;
+  unidades: number;
+  longitud?: number;
+  anchura?: number;
+  altura?: number;
+  subtotal: number;
+}
+
 export interface PartidaPresupuesto {
   id: number;
   capitulo_id: number;
@@ -20,6 +31,8 @@ export interface PartidaPresupuesto {
   importe: number;
   coste_total: number;
   observaciones?: string;
+  lineas_medicion?: LineaMedicion[];
+  cantidad_calculada?: number;
 }
 
 export interface CapituloPresupuesto {
@@ -146,6 +159,21 @@ export const presupuestosApi = {
 
   borrarPartida: async (partidaId: number): Promise<{message: string}> => {
     const response = await apiClient.delete(`/presupuestos/partidas/${partidaId}`);
+    return response.data;
+  },
+
+  crearLineaMedicion: async (partidaId: number, data: Partial<LineaMedicion>): Promise<LineaMedicion> => {
+    const response = await apiClient.post(`/presupuestos/partidas/${partidaId}/lineas-medicion`, data);
+    return response.data;
+  },
+
+  actualizarLineaMedicion: async (lineaId: number, data: Partial<LineaMedicion>): Promise<LineaMedicion> => {
+    const response = await apiClient.put(`/presupuestos/lineas-medicion/${lineaId}`, data);
+    return response.data;
+  },
+
+  borrarLineaMedicion: async (lineaId: number): Promise<{message: string}> => {
+    const response = await apiClient.delete(`/presupuestos/lineas-medicion/${lineaId}`);
     return response.data;
   },
   

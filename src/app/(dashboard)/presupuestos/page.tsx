@@ -5,9 +5,11 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { presupuestosApi, PresupuestoResumen } from '@/lib/presupuestosApi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function PresupuestosGlobalPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [presupuestos, setPresupuestos] = useState<PresupuestoResumen[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -174,10 +176,9 @@ function KanbanBoard({ presupuestos, onStatusChange }: { presupuestos: Presupues
                   draggable
                   onDragStart={(e) => handleDragStart(e, p.id)}
                   onDragEnd={() => setDraggedId(null)}
-                  className={`cursor-grab active:cursor-grabbing transition-transform ${draggedId === p.id ? 'opacity-50 scale-95' : 'opacity-100 hover:scale-[1.02]'}`}
                 >
                   <Link href={`/presupuestos/${p.id}`} draggable={false}>
-                    <GlassCard interactive padding="p-4" className="border-white/10 shadow-lg pointer-events-none">
+                    <GlassCard padding="p-4" className={`border-white/10 shadow-lg cursor-grab active:cursor-grabbing hover:bg-surface/70 transition-colors ${draggedId === p.id ? 'opacity-50 scale-95' : 'opacity-100 hover:scale-[1.02]'}`}>
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-semibold text-sm line-clamp-2 text-text-main">
                           {p.codigo && <span className="text-brand-blue font-mono mr-1">{p.codigo}</span>}

@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { importacionApi, ResultadoAnalisis, CapituloIntermedio, PartidaIntermedia } from '@/lib/importacionApi';
 
-export default function ImportarPresupuestoPage() {
+function ImportarPresupuestoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetId = searchParams.get('target_id');
@@ -439,5 +439,13 @@ export default function ImportarPresupuestoPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ImportarPresupuestoPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-white text-center mt-20">Cargando asistente de importación...</div>}>
+      <ImportarPresupuestoContent />
+    </Suspense>
   );
 }

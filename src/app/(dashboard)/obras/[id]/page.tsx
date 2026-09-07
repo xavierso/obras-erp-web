@@ -103,7 +103,7 @@ export default function ObraDetailPage() {
     <div className="space-y-6">
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div className="flex items-start md:items-center space-x-4">
-        <button onClick={() => router.back()} className="text-text-muted hover:text-accent transition-colors mt-1 md:mt-0">
+        <button onClick={() => router.push('/obras')} className="text-text-muted hover:text-accent transition-colors mt-1 md:mt-0">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -249,6 +249,11 @@ export default function ObraDetailPage() {
           <GlassCard padding="p-5" className="h-full">
             <h3 className="font-semibold text-text-main mb-4">Herramientas de Obra</h3>
             <div className="grid grid-cols-2 gap-3">
+              <Link href={`/obras/${obraId}/cuaderno`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
+                <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                <span className="text-xs font-semibold text-text-main">Cuaderno</span>
+              </Link>
+
               <Link href={`/obras/${obraId}/calendario`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-blue/50 rounded-xl transition-all group">
                 <svg className="w-6 h-6 mb-2 text-text-muted group-hover:text-brand-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 <span className="text-xs font-semibold text-text-main">Calendario</span>

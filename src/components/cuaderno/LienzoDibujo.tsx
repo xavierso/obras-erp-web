@@ -352,8 +352,9 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                     if (el.requestFullscreen) {
                       await el.requestFullscreen().catch(() => {});
                     }
-                    if (window.screen?.orientation?.lock) {
-                      await window.screen.orientation.lock('landscape').catch(() => {});
+                    const orientation = window.screen?.orientation as any;
+                    if (orientation?.lock) {
+                      await orientation.lock('landscape').catch(() => {});
                     }
                   } catch (e) {
                     // Ignorar errores en dispositivos que no soportan la API (ej: iOS Safari)
@@ -361,8 +362,9 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                 } else {
                   setIsFullscreen(false);
                   try {
-                    if (window.screen?.orientation?.unlock) {
-                      window.screen.orientation.unlock();
+                    const orientation = window.screen?.orientation as any;
+                    if (orientation?.unlock) {
+                      orientation.unlock();
                     }
                     if (document.fullscreenElement && document.exitFullscreen) {
                       await document.exitFullscreen().catch(() => {});

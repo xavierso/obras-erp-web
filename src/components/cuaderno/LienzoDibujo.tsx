@@ -26,6 +26,10 @@ interface LienzoDibujoProps {
 }
 
 export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibujoProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const initialPinchRef = useRef<{ dist: number, zoom: number, panX: number, panY: number, cx: number, cy: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -137,20 +141,77 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     resizeCanvas();
   }, [currentPage]);
 
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, [isFullscreen]);
+
   const getPoint = (e: React.PointerEvent): Point => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const cx = (t1.clientX + t2.clientX) / 2;
+      const cy = (t1.clientY + t2.clientY) / 2;
+      initialPinchRef.current = { dist, zoom, panX: pan.x, panY: pan.y, cx, cy };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchRef.current) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const cx = (t1.clientX + t2.clientX) / 2;
+      const cy = (t1.clientY + t2.clientY) / 2;
+      
+      const init = initialPinchRef.current;
+      const scaleFactor = dist / init.dist;
+      let newZoom = Math.max(0.5, Math.min(init.zoom * scaleFactor, 5));
+
+      const newPanX = cx - (init.cx - init.panX) * (newZoom / init.zoom);
+      const newPanY = cy - (init.cy - init.panY) * (newZoom / init.zoom);
+
+      setZoom(newZoom);
+      setPan({ x: newPanX, y: newPanY });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) {
+      initialPinchRef.current = null;
+    }
   };
 
   const startDrawing = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch' && !e.isPrimary) return;
+    if (initialPinchRef.current) return;
     setIsDrawing(true);
     setCurrentStroke({ tool, shapeType, color, width, points: [getPoint(e)] });
   };
 
   const draw = (e: React.PointerEvent) => {
-    if (!isDrawing || !currentStroke) return;
+    if (!isDrawing || !currentStroke || initialPinchRef.current) {
+      if (isDrawing && initialPinchRef.current) setIsDrawing(false);
+      return;
+    }
     const p = getPoint(e);
     if (tool === 'shape') {
       setCurrentStroke({ ...currentStroke, points: [currentStroke.points[0], p] });
@@ -241,13 +302,12 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full border border-gray-700/50 rounded-xl overflow-hidden bg-background">
+    <div className={`flex flex-col flex-1 w-full border border-gray-700/50 rounded-xl overflow-hidden bg-background transition-all ${isFullscreen ? 'fixed inset-0 z-[60] rounded-none border-none h-[100dvh]' : ''}`}>
       {/* Toolbar */}
-      <div className="p-3 border-b border-gray-700/50 bg-surface flex flex-col md:flex-row gap-3 shadow-sm z-10 justify-between">
+      <div className="p-3 border-b border-gray-700/50 bg-surface flex flex-col md:flex-row md:flex-wrap gap-3 shadow-sm z-10 items-center justify-between">
         
-        {/* Tools, Colors, Widths */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Tools */}
+        {/* Row 1 (Mobile) / Left (Desktop): Tools and Actions */}
+        <div className="flex justify-between items-center w-full md:w-auto gap-4">
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
             {(['pen', 'pencil', 'highlighter', 'marker', 'shape'] as ToolType[]).map(t => (
               <button 
@@ -263,7 +323,6 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                 {t === 'shape' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM14 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>}
               </button>
             ))}
-            
             {tool === 'shape' && (
               <div className="flex items-center ml-2 border-l border-white/20 pl-2">
                 {(['rectangle', 'circle', 'line'] as ShapeType[]).map(st => (
@@ -277,9 +336,59 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
             )}
           </div>
 
-          <div className="h-6 w-px bg-white/20 mx-1 hidden md:block" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button onClick={handleUndo} disabled={strokes.length === 0} className="p-2 text-text-muted hover:text-white disabled:opacity-50" title="Deshacer">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+            </button>
+            <button onClick={handleClear} className="p-2 text-red-400 hover:text-red-300" title="Limpiar hoja">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+            <button 
+              onClick={async () => {
+                if (!isFullscreen) {
+                  setIsFullscreen(true);
+                  try {
+                    const el = document.documentElement;
+                    if (el.requestFullscreen) {
+                      await el.requestFullscreen().catch(() => {});
+                    }
+                    if (window.screen?.orientation?.lock) {
+                      await window.screen.orientation.lock('landscape').catch(() => {});
+                    }
+                  } catch (e) {
+                    // Ignorar errores en dispositivos que no soportan la API (ej: iOS Safari)
+                  }
+                } else {
+                  setIsFullscreen(false);
+                  try {
+                    if (window.screen?.orientation?.unlock) {
+                      window.screen.orientation.unlock();
+                    }
+                    if (document.fullscreenElement && document.exitFullscreen) {
+                      await document.exitFullscreen().catch(() => {});
+                    }
+                  } catch (e) {
+                    // Ignorar
+                  }
+                }
+              }} 
+              className="p-2 text-text-muted hover:text-white" 
+              title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+            >
+              {isFullscreen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 14h4v4M20 10h-4V6M14 20v-4h4M10 4v4H6" /></svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+              )}
+            </button>
+            <button onClick={handleExportPDF} className="p-2 text-blue-400 hover:text-blue-300" title="Exportar a PDF">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            </button>
+          </div>
+        </div>
 
-          {/* Colors */}
+        {/* Row 2 (Mobile) / Middle (Desktop): Colors and Widths */}
+        <div className="flex justify-start items-center w-full md:w-auto gap-4">
           <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-lg">
             {colores.map(c => (
               <button 
@@ -291,9 +400,6 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
             ))}
           </div>
 
-          <div className="h-6 w-px bg-white/20 mx-1 hidden md:block" />
-
-          {/* Widths */}
           <div className="flex gap-2 items-center bg-white/5 p-1.5 rounded-lg">
             {grosores.map(w => (
               <button 
@@ -307,9 +413,8 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
           </div>
         </div>
 
-        {/* Actions & Pagination */}
-        <div className="flex items-center gap-2 flex-wrap self-end md:self-auto w-full md:w-auto justify-between md:justify-end">
-          
+        {/* Row 3 (Mobile) / Right (Desktop): Pagination and Save */}
+        <div className="flex justify-center w-full md:w-auto gap-2 items-center">
           <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
             <button 
               onClick={() => setCurrentPage(p => Math.max(0, p - 1))} 
@@ -328,23 +433,19 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
-            <button onClick={handleAddPage} className="p-1 text-accent hover:text-accent-hover ml-1" title="Añadir hoja">
+            <button onClick={handleAddPage} className="p-1 text-accent hover:text-accent-hover ml-1 border-l border-white/10 pl-2" title="Añadir hoja">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </button>
           </div>
-
-          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end flex-1 min-w-[200px]">
-            <button onClick={handleUndo} disabled={strokes.length === 0} className="p-2 text-text-muted hover:text-white disabled:opacity-50" title="Deshacer">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-            </button>
-            <button onClick={handleClear} className="p-2 text-red-400 hover:text-red-300" title="Limpiar hoja">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
-            <button onClick={handleExportPDF} className="p-2 text-blue-400 hover:text-blue-300" title="Exportar a PDF">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            </button>
-            <Button onClick={handleSave} disabled={saving} className="ml-1 !py-1 !px-3 text-xs h-8 flex-shrink-0">
-              {saving ? 'Guardando...' : 'Guardar'}
+          
+          <div className="md:hidden">
+            <Button onClick={handleSave} disabled={saving} className="!p-2 h-[34px] w-[34px] flex-shrink-0 flex items-center justify-center rounded-lg" title="Guardar">
+               {saving ? <span className="animate-pulse">...</span> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}
+            </Button>
+          </div>
+          <div className="hidden md:block">
+            <Button onClick={handleSave} disabled={saving} className="!py-1 !px-3 text-xs h-[34px] flex-shrink-0">
+                {saving ? 'Guardando...' : 'Guardar'}
             </Button>
           </div>
         </div>
@@ -353,22 +454,32 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
       {/* Canvas Area with GoodNotes Style */}
       <div 
         ref={containerRef} 
-        className="flex-1 relative cursor-crosshair overflow-hidden"
-        style={{ 
-          backgroundColor: '#f9f8eb',
-          backgroundImage: 'linear-gradient(transparent 19px, #e0e0e0 20px)', 
-          backgroundSize: '100% 20px', 
-          touchAction: 'none' 
-        }}
+        className="flex-1 relative overflow-hidden bg-[#e0dfd5]"
+        style={{ touchAction: 'none' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
-        <canvas
-          ref={canvasRef}
-          onPointerDown={startDrawing}
-          onPointerMove={draw}
-          onPointerUp={stopDrawing}
-          onPointerOut={stopDrawing}
-          className="absolute inset-0"
-        />
+        <div 
+          className="absolute inset-0 cursor-crosshair origin-top-left"
+          style={{ 
+            backgroundColor: '#f9f8eb',
+            backgroundImage: 'linear-gradient(transparent 19px, #e0e0e0 20px)', 
+            backgroundSize: '100% 20px', 
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transition: initialPinchRef.current ? 'none' : 'transform 0.1s ease-out'
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerOut={stopDrawing}
+            className="w-full h-full"
+          />
+        </div>
       </div>
     </div>
   );

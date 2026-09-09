@@ -3,13 +3,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 
+import { getStroke } from 'perfect-freehand';
+
 interface Point {
   x: number;
   y: number;
 }
 
-export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape';
+export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape' | 'eraser';
 export type ShapeType = 'rectangle' | 'circle' | 'line';
+
+function getSvgPathFromStroke(stroke: number[][]) {
+  if (!stroke.length) return '';
+  const d = stroke.reduce(
+    (acc, [x0, y0], i, arr) => {
+      const [x1, y1] = arr[(i + 1) % arr.length];
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+      return acc;
+    },
+    ['M', ...stroke[0], 'Q']
+  );
+  d.push('Z');
+  return d.join(' ');
+}
 
 interface Stroke {
   tool?: ToolType;
@@ -77,33 +93,60 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     if (stroke.points.length === 0) return;
     
     const t = stroke.tool || 'pen';
-    ctx.beginPath();
+    if (t === 'eraser') return; // El borrador no se dibuja
+
+    ctx.fillStyle = stroke.color;
     ctx.strokeStyle = stroke.color;
-    ctx.lineWidth = stroke.width;
-    ctx.lineCap = t === 'highlighter' ? 'square' : 'round';
-    ctx.lineJoin = 'round';
-    ctx.globalAlpha = t === 'highlighter' ? 0.4 : (t === 'pencil' ? 0.8 : 1.0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1.0;
 
     if (t === 'shape' && stroke.shapeType && stroke.points.length >= 2) {
+      ctx.beginPath();
+      ctx.lineWidth = stroke.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       const start = stroke.points[0];
       const end = stroke.points[stroke.points.length - 1];
       if (stroke.shapeType === 'rectangle') {
         ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
       } else if (stroke.shapeType === 'circle') {
-        const r = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+        const r = Math.hypot(end.x - start.x, end.y - start.y);
         ctx.arc(start.x, start.y, r, 0, 2 * Math.PI);
       } else if (stroke.shapeType === 'line') {
         ctx.moveTo(start.x, start.y);
         ctx.lineTo(end.x, end.y);
       }
+      ctx.stroke();
     } else {
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      let options = {
+        size: stroke.width,
+        thinning: 0.5,
+        smoothing: 0.5,
+        streamline: 0.5,
+      };
+
+      if (t === 'pen') {
+        options = { size: stroke.width, thinning: 0.3, smoothing: 0.6, streamline: 0.6 };
+      } else if (t === 'pencil') {
+        options = { size: stroke.width * 0.8, thinning: 0.1, smoothing: 0.4, streamline: 0.4 };
+        ctx.globalAlpha = 0.8;
+      } else if (t === 'highlighter') {
+        options = { size: stroke.width * 1.5, thinning: -0.1, smoothing: 0.8, streamline: 0.8 };
+        ctx.globalAlpha = 0.4;
+        ctx.globalCompositeOperation = 'multiply';
+      } else if (t === 'marker') {
+        options = { size: stroke.width, thinning: 0, smoothing: 0.5, streamline: 0.5 };
       }
+
+      const rawPoints = stroke.points.map(p => [p.x, p.y]);
+      const outlinePoints = getStroke(rawPoints, options);
+      const pathData = getSvgPathFromStroke(outlinePoints);
+      const path = new Path2D(pathData);
+      ctx.fill(path);
     }
-    ctx.stroke();
+
     ctx.globalAlpha = 1.0;
+    ctx.globalCompositeOperation = 'source-over';
   };
 
   const redraw = () => {
@@ -213,6 +256,28 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
       return;
     }
     const p = getPoint(e);
+
+    if (tool === 'eraser') {
+      const eraseRadius = 20 / zoom;
+      const newStrokes = strokes.filter(s => {
+        if (s.tool === 'shape' && s.shapeType && s.points.length >= 2) {
+          const start = s.points[0];
+          const end = s.points[s.points.length - 1];
+          const minX = Math.min(start.x, end.x) - eraseRadius;
+          const maxX = Math.max(start.x, end.x) + eraseRadius;
+          const minY = Math.min(start.y, end.y) - eraseRadius;
+          const maxY = Math.max(start.y, end.y) + eraseRadius;
+          return !(p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+        }
+        return !s.points.some(pt => Math.hypot(pt.x - p.x, pt.y - p.y) < eraseRadius);
+      });
+
+      if (newStrokes.length !== strokes.length) {
+        updateStrokes(newStrokes);
+      }
+      return;
+    }
+
     if (tool === 'shape') {
       setCurrentStroke({ ...currentStroke, points: [currentStroke.points[0], p] });
     } else {
@@ -309,7 +374,7 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
         {/* Row 1 (Mobile) / Left (Desktop): Tools and Actions */}
         <div className="flex justify-between items-center w-full md:w-auto gap-4">
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
-            {(['pen', 'pencil', 'highlighter', 'marker', 'shape'] as ToolType[]).map(t => (
+            {(['pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape'] as ToolType[]).map(t => (
               <button 
                 key={t} 
                 onClick={() => setTool(t)} 
@@ -320,6 +385,7 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                 {t === 'pencil' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
                 {t === 'highlighter' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10M9 17v4m6-4v4M12 3v14m0-14a3 3 0 00-3 3v7a3 3 0 006 0V6a3 3 0 00-3-3z" /></svg>}
                 {t === 'marker' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
+                {t === 'eraser' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20h9M4.5 14.5l8-8a2.121 2.121 0 013 3l-8 8a2.121 2.121 0 01-3-3z" /></svg>}
                 {t === 'shape' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM14 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>}
               </button>
             ))}

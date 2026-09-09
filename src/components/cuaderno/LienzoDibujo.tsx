@@ -617,13 +617,14 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
         {/* Row 1 (Mobile) / Left (Desktop): Tools and Actions */}
         <div className="flex justify-between items-center w-full md:w-auto gap-4">
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
-            {(['pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape'] as ToolType[]).map(t => (
+            {(['selector', 'pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape'] as ToolType[]).map(t => (
               <button 
                 key={t} 
                 onClick={() => setTool(t)} 
                 className={`p-2 rounded-md transition-all ${tool === t ? 'bg-accent text-white shadow-md' : 'text-text-muted hover:text-white hover:bg-white/10'}`}
                 title={t}
               >
+                {t === 'selector' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>}
                 {t === 'pen' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>}
                 {t === 'pencil' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
                 {t === 'highlighter' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10M9 17v4m6-4v4M12 3v14m0-14a3 3 0 00-3 3v7a3 3 0 006 0V6a3 3 0 00-3-3z" /></svg>}

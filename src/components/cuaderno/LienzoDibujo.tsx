@@ -72,6 +72,7 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   const [dragStartPoint, setDragStartPoint] = useState<Point | null>(null);
   const [dragOriginalStrokes, setDragOriginalStrokes] = useState<Stroke[]>([]);
   const [clipboard, setClipboard] = useState<Stroke[]>([]);
+  const [customColors, setCustomColors] = useState<string[]>([]);
 
   const [color, setColor] = useState('#ffffff');
   const [width, setWidth] = useState(3);
@@ -701,15 +702,31 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
 
         {/* Row 2 (Mobile) / Middle (Desktop): Colors and Widths */}
         <div className="flex justify-start items-center w-full md:w-auto gap-4">
-          <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-lg">
-            {colores.map(c => (
+          <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-lg flex-wrap items-center">
+            {[...colores, ...customColors].map(c => (
               <button 
                 key={c} 
                 onClick={() => setColor(c)} 
                 className={`w-6 h-6 rounded-full border-2 transition-transform ${color === c ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`} 
                 style={{ backgroundColor: c }} 
+                title={c}
               />
             ))}
+            <div className="w-px h-4 bg-gray-600 mx-1"></div>
+            <label className="cursor-pointer w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center hover:bg-white/10" title="Color personalizado">
+               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+               <input 
+                 type="color" 
+                 className="opacity-0 absolute w-0 h-0" 
+                 onChange={(e) => {
+                   const newColor = e.target.value;
+                   setColor(newColor);
+                   if (!colores.includes(newColor) && !customColors.includes(newColor)) {
+                     setCustomColors(prev => [newColor, ...prev].slice(0, 5));
+                   }
+                 }}
+               />
+            </label>
           </div>
 
           <div className="flex gap-2 items-center bg-white/5 p-1.5 rounded-lg">

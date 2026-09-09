@@ -10,7 +10,7 @@ interface Point {
   y: number;
 }
 
-export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape' | 'eraser' | 'selector';
+export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape' | 'eraser' | 'selector' | 'text' | 'image';
 export type ShapeType = 'rectangle' | 'circle' | 'line';
 
 function getSvgPathFromStroke(stroke: number[][]) {
@@ -34,6 +34,8 @@ interface Stroke {
   color: string;
   width: number;
   points: Point[];
+  text?: string;
+  imageUrl?: string;
 }
 
 interface LienzoDibujoProps {
@@ -73,6 +75,7 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   const [dragOriginalStrokes, setDragOriginalStrokes] = useState<Stroke[]>([]);
   const [clipboard, setClipboard] = useState<Stroke[]>([]);
   const [customColors, setCustomColors] = useState<string[]>([]);
+  const [imageCache, setImageCache] = useState<Record<string, HTMLImageElement>>({});
 
   const [color, setColor] = useState('#ffffff');
   const [width, setWidth] = useState(3);
@@ -122,7 +125,23 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     if (stroke.points.length === 0) return;
     
     const t = stroke.tool || 'pen';
-    if (t === 'eraser') return; // El borrador no se dibuja
+    if (t === 'eraser') return;
+
+    if (t === 'text' && stroke.text) {
+      ctx.fillStyle = stroke.color;
+      ctx.font = `${stroke.width * 5}px sans-serif`;
+      ctx.textBaseline = 'top';
+      ctx.fillText(stroke.text, stroke.points[0].x, stroke.points[0].y);
+      return;
+    }
+
+    if (t === 'image' && stroke.imageUrl && stroke.id && imageCache[stroke.id]) {
+      const img = imageCache[stroke.id];
+      const width = stroke.points[1].x - stroke.points[0].x;
+      const height = stroke.points[2].y - stroke.points[0].y;
+      ctx.drawImage(img, stroke.points[0].x, stroke.points[0].y, width, height);
+      return;
+    }
 
     ctx.fillStyle = stroke.color;
     ctx.strokeStyle = stroke.color;
@@ -317,6 +336,31 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     setIsDrawing(true);
     const p = getPoint(e);
 
+    if (tool === 'text') {
+      const text = prompt('Introduce el texto:');
+      if (text) {
+        const id = crypto.randomUUID();
+        // Calculate approx bounding box for the text
+        const fontSize = width * 5;
+        const textWidth = text.length * (fontSize * 0.6); // rough estimate
+        const newStroke: Stroke = {
+          id,
+          tool: 'text',
+          color,
+          width,
+          text,
+          points: [
+            { x: p.x, y: p.y },
+            { x: p.x + textWidth, y: p.y },
+            { x: p.x + textWidth, y: p.y + fontSize },
+            { x: p.x, y: p.y + fontSize }
+          ]
+        };
+        updateStrokes([...strokes, newStroke]);
+      }
+      return;
+    }
+
     if (tool === 'selector') {
       let clickedHandle: InteractionMode = 'draw';
       
@@ -361,6 +405,31 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
       return;
     }
     const p = getPoint(e);
+
+    if (tool === 'text') {
+      const text = prompt('Introduce el texto:');
+      if (text) {
+        const id = crypto.randomUUID();
+        // Calculate approx bounding box for the text
+        const fontSize = width * 5;
+        const textWidth = text.length * (fontSize * 0.6); // rough estimate
+        const newStroke: Stroke = {
+          id,
+          tool: 'text',
+          color,
+          width,
+          text,
+          points: [
+            { x: p.x, y: p.y },
+            { x: p.x + textWidth, y: p.y },
+            { x: p.x + textWidth, y: p.y + fontSize },
+            { x: p.x, y: p.y + fontSize }
+          ]
+        };
+        updateStrokes([...strokes, newStroke]);
+      }
+      return;
+    }
 
     if (tool === 'selector') {
       if (interactionMode === 'select_box' && selectionBox) {
@@ -525,6 +594,49 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     setClipboard(copies);
   };
 
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      const img = new Image();
+      img.src = result;
+      img.onload = () => {
+        const id = crypto.randomUUID();
+        setImageCache(prev => ({ ...prev, [id]: img }));
+        
+        // Scale image down if it's too large
+        let imgWidth = img.width;
+        let imgHeight = img.height;
+        const maxW = 300;
+        if (imgWidth > maxW) {
+           imgHeight = (maxW / imgWidth) * imgHeight;
+           imgWidth = maxW;
+        }
+
+        const newStroke: Stroke = {
+          id,
+          tool: 'image',
+          color: '#ffffff',
+          width: 1,
+          imageUrl: result,
+          points: [
+            { x: 50, y: 50 },
+            { x: 50 + imgWidth, y: 50 },
+            { x: 50 + imgWidth, y: 50 + imgHeight },
+            { x: 50, y: 50 + imgHeight }
+          ]
+        };
+        updateStrokes([...strokes, newStroke]);
+        setTool('selector'); // Auto-switch to selector to move it
+      };
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleUndo = () => {
     if (strokes.length > 0) updateStrokes(strokes.slice(0, -1));
   };
@@ -618,7 +730,7 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
         {/* Row 1 (Mobile) / Left (Desktop): Tools and Actions */}
         <div className="flex justify-between items-center w-full md:w-auto gap-4">
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
-            {(['selector', 'pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape'] as ToolType[]).map(t => (
+            {(['selector', 'pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape', 'text', 'image'] as ToolType[]).map(t => (
               <button 
                 key={t} 
                 onClick={() => setTool(t)} 
@@ -632,6 +744,13 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                 {t === 'marker' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
                 {t === 'eraser' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20h9M4.5 14.5l8-8a2.121 2.121 0 013 3l-8 8a2.121 2.121 0 01-3-3z" /></svg>}
                 {t === 'shape' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM14 13a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>}
+                {t === 'text' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M9 3v2m6-2v2M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z" opacity="0"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 6h10M12 6v12M10 18h4" /></svg>}
+                {t === 'image' && (
+                  <label className="cursor-pointer w-full h-full flex items-center justify-center">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                )}
               </button>
             ))}
             {tool === 'shape' && (

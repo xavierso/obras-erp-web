@@ -10,7 +10,7 @@ interface Point {
   y: number;
 }
 
-export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape' | 'eraser';
+export type ToolType = 'pen' | 'pencil' | 'highlighter' | 'marker' | 'shape' | 'eraser' | 'selector';
 export type ShapeType = 'rectangle' | 'circle' | 'line';
 
 function getSvgPathFromStroke(stroke: number[][]) {
@@ -28,6 +28,7 @@ function getSvgPathFromStroke(stroke: number[][]) {
 }
 
 interface Stroke {
+  id?: string;
   tool?: ToolType;
   shapeType?: ShapeType;
   color: string;
@@ -62,6 +63,16 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
 
+  // Selection & Transform State
+  const [selectedStrokeIds, setSelectedStrokeIds] = useState<string[]>([]);
+  const [selectionBox, setSelectionBox] = useState<{ start: Point, end: Point } | null>(null);
+  
+  type InteractionMode = 'draw' | 'select_box' | 'move_selection' | 'resize_tl' | 'resize_tr' | 'resize_bl' | 'resize_br';
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>('draw');
+  const [dragStartPoint, setDragStartPoint] = useState<Point | null>(null);
+  const [dragOriginalStrokes, setDragOriginalStrokes] = useState<Stroke[]>([]);
+  const [clipboard, setClipboard] = useState<Stroke[]>([]);
+
   const [color, setColor] = useState('#ffffff');
   const [width, setWidth] = useState(3);
   const [tool, setTool] = useState<ToolType>('pen');
@@ -82,12 +93,29 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
       hasLoadedRef.current = true;
 
       if (initialData.pages && Array.isArray(initialData.pages)) {
-        setPages(initialData.pages.map((p: any) => p.strokes || p.items || []));
+        setPages(initialData.pages.map((p: any) => 
+          (p.strokes || p.items || []).map((s: Stroke) => ({ ...s, id: s.id || crypto.randomUUID() }))
+        ));
       } else if (initialData.strokes && Array.isArray(initialData.strokes)) {
-        setPages([initialData.strokes]);
+        setPages([initialData.strokes.map((s: Stroke) => ({ ...s, id: s.id || crypto.randomUUID() }))]);
       }
     }
   }, [initialData]);
+
+  const getBoundingBox = (strokeList: Stroke[]) => {
+    if (!strokeList.length) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    strokeList.forEach(s => {
+      s.points.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      });
+    });
+    if (minX === Infinity) return null;
+    return { x: minX - 5, y: minY - 5, width: maxX - minX + 10, height: maxY - minY + 10 };
+  };
 
   const drawStroke = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {
     if (stroke.points.length === 0) return;
@@ -158,11 +186,50 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     strokes.forEach(s => drawStroke(ctx, s));
     if (currentStroke) drawStroke(ctx, currentStroke);
+
+    if (selectionBox) {
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 1;
+      const x = Math.min(selectionBox.start.x, selectionBox.end.x);
+      const y = Math.min(selectionBox.start.y, selectionBox.end.y);
+      const w = Math.abs(selectionBox.start.x - selectionBox.end.x);
+      const h = Math.abs(selectionBox.start.y - selectionBox.end.y);
+      ctx.rect(x, y, w, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    if (selectedStrokeIds.length > 0) {
+      const selectedStrokes = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+      const bb = getBoundingBox(selectedStrokes);
+      if (bb) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.rect(bb.x, bb.y, bb.width, bb.height);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        const handleSize = 8;
+        const drawHandle = (hx: number, hy: number) => {
+          ctx.beginPath();
+          ctx.rect(hx - handleSize/2, hy - handleSize/2, handleSize, handleSize);
+          ctx.fill();
+          ctx.stroke();
+        };
+        drawHandle(bb.x, bb.y);
+        drawHandle(bb.x + bb.width, bb.y);
+        drawHandle(bb.x, bb.y + bb.height);
+        drawHandle(bb.x + bb.width, bb.y + bb.height);
+      }
+    }
   };
 
   useEffect(() => {
     redraw();
-  }, [strokes, currentStroke]);
+  }, [strokes, currentStroke, selectionBox, selectedStrokeIds]);
 
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
@@ -247,15 +314,117 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
     if (e.pointerType === 'touch' && !e.isPrimary) return;
     if (initialPinchRef.current) return;
     setIsDrawing(true);
-    setCurrentStroke({ tool, shapeType, color, width, points: [getPoint(e)] });
+    const p = getPoint(e);
+
+    if (tool === 'selector') {
+      let clickedHandle: InteractionMode = 'draw';
+      
+      if (selectedStrokeIds.length > 0) {
+        const selectedStrokes = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+        const bb = getBoundingBox(selectedStrokes);
+        if (bb) {
+          const handleSize = 12;
+          const inHandle = (hx: number, hy: number) => 
+            Math.abs(p.x - hx) < handleSize && Math.abs(p.y - hy) < handleSize;
+
+          if (inHandle(bb.x, bb.y)) clickedHandle = 'resize_tl';
+          else if (inHandle(bb.x + bb.width, bb.y)) clickedHandle = 'resize_tr';
+          else if (inHandle(bb.x, bb.y + bb.height)) clickedHandle = 'resize_bl';
+          else if (inHandle(bb.x + bb.width, bb.y + bb.height)) clickedHandle = 'resize_br';
+          else if (p.x >= bb.x && p.x <= bb.x + bb.width && p.y >= bb.y && p.y <= bb.y + bb.height) {
+            clickedHandle = 'move_selection';
+          }
+        }
+      }
+
+      if (clickedHandle !== 'draw') {
+        setInteractionMode(clickedHandle);
+        setDragStartPoint(p);
+        const originalStrokes = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+        setDragOriginalStrokes(JSON.parse(JSON.stringify(originalStrokes)));
+      } else {
+        setInteractionMode('select_box');
+        setSelectedStrokeIds([]);
+        setSelectionBox({ start: p, end: p });
+      }
+      return;
+    }
+
+    setInteractionMode('draw');
+    setCurrentStroke({ tool, shapeType, color, width, points: [p] });
   };
 
   const draw = (e: React.PointerEvent) => {
-    if (!isDrawing || !currentStroke || initialPinchRef.current) {
+    if (!isDrawing || initialPinchRef.current) {
       if (isDrawing && initialPinchRef.current) setIsDrawing(false);
       return;
     }
     const p = getPoint(e);
+
+    if (tool === 'selector') {
+      if (interactionMode === 'select_box' && selectionBox) {
+        setSelectionBox({ ...selectionBox, end: p });
+      } else if (interactionMode === 'move_selection' && dragStartPoint) {
+        const dx = p.x - dragStartPoint.x;
+        const dy = p.y - dragStartPoint.y;
+        const newStrokes = strokes.map(s => {
+          if (s.id && selectedStrokeIds.includes(s.id)) {
+            const original = dragOriginalStrokes.find(os => os.id === s.id);
+            if (original) {
+              return { ...s, points: original.points.map(pt => ({ x: pt.x + dx, y: pt.y + dy })) };
+            }
+          }
+          return s;
+        });
+        updateStrokes(newStrokes);
+      } else if (interactionMode.startsWith('resize_') && dragStartPoint) {
+        const originalBb = getBoundingBox(dragOriginalStrokes);
+        if (originalBb) {
+          let scaleX = 1, scaleY = 1;
+          const { x, y, width: w, height: h } = originalBb;
+          
+          if (interactionMode === 'resize_br') {
+            scaleX = Math.max(0.1, (p.x - x) / w);
+            scaleY = Math.max(0.1, (p.y - y) / h);
+          } else if (interactionMode === 'resize_bl') {
+            scaleX = Math.max(0.1, ((x + w) - p.x) / w);
+            scaleY = Math.max(0.1, (p.y - y) / h);
+          } else if (interactionMode === 'resize_tr') {
+            scaleX = Math.max(0.1, (p.x - x) / w);
+            scaleY = Math.max(0.1, ((y + h) - p.y) / h);
+          } else if (interactionMode === 'resize_tl') {
+            scaleX = Math.max(0.1, ((x + w) - p.x) / w);
+            scaleY = Math.max(0.1, ((y + h) - p.y) / h);
+          }
+          
+          let originX = x, originY = y;
+          if (interactionMode === 'resize_br') { originX = x; originY = y; }
+          else if (interactionMode === 'resize_bl') { originX = x + w; originY = y; }
+          else if (interactionMode === 'resize_tr') { originX = x; originY = y + h; }
+          else if (interactionMode === 'resize_tl') { originX = x + w; originY = y + h; }
+
+          const newStrokes = strokes.map(s => {
+            if (s.id && selectedStrokeIds.includes(s.id)) {
+              const original = dragOriginalStrokes.find(os => os.id === s.id);
+              if (original) {
+                return {
+                  ...s,
+                  points: original.points.map(pt => ({
+                    x: originX + (pt.x - originX) * scaleX,
+                    y: originY + (pt.y - originY) * scaleY
+                  }))
+                };
+              }
+            }
+            return s;
+          });
+          updateStrokes(newStrokes);
+        }
+      }
+      return;
+    }
+
+    if (!currentStroke) return;
 
     if (tool === 'eraser') {
       const eraseRadius = 20 / zoom;
@@ -286,18 +455,92 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   };
 
   const stopDrawing = () => {
-    if (isDrawing && currentStroke) {
-      updateStrokes([...strokes, currentStroke]);
+    if (!isDrawing) return;
+    
+    if (tool === 'selector' && interactionMode === 'select_box' && selectionBox) {
+      const minX = Math.min(selectionBox.start.x, selectionBox.end.x);
+      const maxX = Math.max(selectionBox.start.x, selectionBox.end.x);
+      const minY = Math.min(selectionBox.start.y, selectionBox.end.y);
+      const maxY = Math.max(selectionBox.start.y, selectionBox.end.y);
+      
+      const newSelected = strokes.filter(s => {
+        return s.points.some(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+      }).map(s => s.id as string).filter(Boolean);
+      
+      setSelectedStrokeIds(newSelected);
+      setSelectionBox(null);
+    }
+
+    if (tool !== 'selector' && currentStroke) {
+      const strokeWithId = { ...currentStroke, id: crypto.randomUUID() };
+      updateStrokes([...strokes, strokeWithId]);
       setCurrentStroke(null);
     }
+    
+    setInteractionMode('draw');
+    setDragStartPoint(null);
     setIsDrawing(false);
+  };
+
+  const deleteSelection = () => {
+    updateStrokes(strokes.filter(s => !s.id || !selectedStrokeIds.includes(s.id)));
+    setSelectedStrokeIds([]);
+  };
+
+  const copySelection = () => {
+    const selected = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+    setClipboard(JSON.parse(JSON.stringify(selected)));
+  };
+
+  const cutSelection = () => {
+    copySelection();
+    deleteSelection();
+  };
+
+  const duplicateSelection = () => {
+    const selected = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+    const copies = selected.map(s => {
+      return {
+        ...JSON.parse(JSON.stringify(s)),
+        id: crypto.randomUUID(),
+        points: s.points.map((p: Point) => ({ x: p.x + 20, y: p.y + 20 }))
+      };
+    });
+    updateStrokes([...strokes, ...copies]);
+    setSelectedStrokeIds(copies.map(c => c.id as string));
+  };
+
+  const pasteFromClipboard = () => {
+    if (clipboard.length === 0) return;
+    const copies = clipboard.map(s => {
+      return {
+        ...JSON.parse(JSON.stringify(s)),
+        id: crypto.randomUUID(),
+        points: s.points.map((p: Point) => ({ x: p.x + 20, y: p.y + 20 }))
+      };
+    });
+    updateStrokes([...strokes, ...copies]);
+    setSelectedStrokeIds(copies.map(c => c.id as string));
+    setClipboard(copies);
   };
 
   const handleUndo = () => {
     if (strokes.length > 0) updateStrokes(strokes.slice(0, -1));
   };
   const handleClear = () => updateStrokes([]);
-  
+
+  let floatingMenuPos = null;
+  if (selectedStrokeIds.length > 0) {
+    const selectedStrokes = strokes.filter(s => s.id && selectedStrokeIds.includes(s.id));
+    const bb = getBoundingBox(selectedStrokes);
+    if (bb && containerRef.current) {
+      floatingMenuPos = {
+        left: bb.x * zoom + pan.x,
+        top: Math.max(0, bb.y * zoom + pan.y - 40)
+      };
+    }
+  }
+
   const handleAddPage = () => {
     setPages([...pages, []]);
     setCurrentPage(pages.length);
@@ -534,19 +777,46 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
           style={{ 
             backgroundColor: '#f9f8eb',
             backgroundImage: 'linear-gradient(transparent 19px, #e0e0e0 20px)', 
-            backgroundSize: '100% 20px', 
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transition: initialPinchRef.current ? 'none' : 'transform 0.1s ease-out'
+            backgroundSize: '100% 20px'
           }}
         >
           <canvas
             ref={canvasRef}
+            className="absolute top-0 left-0"
+            style={{ 
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: '0 0',
+              cursor: tool === 'selector' ? (interactionMode !== 'draw' && interactionMode !== 'select_box' ? 'grabbing' : 'crosshair') : 'crosshair'
+            }}
             onPointerDown={startDrawing}
             onPointerMove={draw}
             onPointerUp={stopDrawing}
-            onPointerOut={stopDrawing}
-            className="w-full h-full"
+            onPointerLeave={stopDrawing}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           />
+          {/* Menú Flotante de Selección */}
+          {floatingMenuPos && (
+            <div 
+              className="absolute bg-surface border border-gray-700 shadow-xl rounded-lg flex items-center p-1 gap-1 z-50 text-text-muted"
+              style={{ left: floatingMenuPos.left, top: floatingMenuPos.top }}
+            >
+              <button onClick={cutSelection} className="p-1.5 hover:bg-white/10 hover:text-white rounded" title="Cortar">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
+              </button>
+              <button onClick={copySelection} className="p-1.5 hover:bg-white/10 hover:text-white rounded" title="Copiar">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              </button>
+              <button onClick={duplicateSelection} className="p-1.5 hover:bg-white/10 hover:text-white rounded" title="Duplicar">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+              </button>
+              <div className="w-px h-4 bg-gray-600 mx-1"></div>
+              <button onClick={deleteSelection} className="p-1.5 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded" title="Eliminar">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

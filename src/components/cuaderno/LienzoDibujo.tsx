@@ -818,6 +818,17 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
               </button>
             </div>
           )}
+          {/* Botón flotante para pegar (si hay algo en el portapapeles) */}
+          {clipboard.length > 0 && (
+            <button
+              onClick={pasteFromClipboard}
+              className="absolute top-4 right-4 bg-surface border border-gray-700 shadow-xl rounded-lg p-2 text-text-muted hover:text-white hover:bg-white/10 z-50 flex items-center gap-2"
+              title="Pegar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+              <span className="text-sm font-medium">Pegar</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

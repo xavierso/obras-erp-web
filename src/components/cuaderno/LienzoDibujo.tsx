@@ -45,6 +45,9 @@ interface LienzoDibujoProps {
 }
 
 export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibujoProps) {
+  const A4_WIDTH = 800;
+  const A4_HEIGHT = 1131;
+  const [isRotated, setIsRotated] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -253,10 +256,9 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
 
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (canvas && container) {
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+    if (canvas) {
+      canvas.width = A4_WIDTH;
+      canvas.height = A4_HEIGHT;
       redraw();
     }
   };
@@ -784,14 +786,23 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
                     }
                     const orientation = window.screen?.orientation as any;
                     if (orientation?.lock) {
-                      await orientation.lock('landscape').catch(() => {});
+                      await orientation.lock('landscape').catch((e: any) => {
+                         if (e.name === 'NotSupportedError') {
+                            setIsRotated(true);
+                         }
+                      });
+                    } else {
+                      setIsRotated(true);
                     }
-                  } catch (e) {
-                    // Ignorar errores en dispositivos que no soportan la API (ej: iOS Safari)
+                  } catch (e: any) {
+                    if (e.name === 'NotSupportedError') {
+                       setIsRotated(true);
+                    }
                   }
                 } else {
                   setIsFullscreen(false);
                   try {
+                    setIsRotated(false);
                     const orientation = window.screen?.orientation as any;
                     if (orientation?.unlock) {
                       orientation.unlock();

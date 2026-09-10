@@ -727,11 +727,12 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
   return (
     <div className={`flex flex-col flex-1 w-full border border-gray-700/50 rounded-xl overflow-hidden bg-background transition-all ${isFullscreen ? 'fixed inset-0 z-[60] rounded-none border-none h-[100dvh]' : ''}`}>
       {/* Toolbar */}
-      <div className="p-3 border-b border-gray-700/50 bg-surface flex flex-col md:flex-row md:flex-wrap gap-3 shadow-sm z-10 items-center justify-between">
+      <div className="p-2 border-b border-gray-700/50 bg-surface flex flex-col md:flex-row md:flex-wrap gap-3 shadow-sm z-10 w-full overflow-hidden">
         
         {/* Row 1 (Mobile) / Left (Desktop): Tools and Actions */}
-        <div className="flex justify-between items-center w-full md:w-auto gap-4">
-          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
+        <div className="flex flex-col md:flex-row items-center w-full md:w-auto gap-2 md:gap-4">
+          {/* Herramientas (Scrollable en móvil) */}
+          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg w-full overflow-x-auto no-scrollbar scroll-smooth">
             {(['selector', 'pen', 'pencil', 'highlighter', 'marker', 'eraser', 'shape', 'text', 'image'] as ToolType[]).map(t => (
               <button 
                 key={t} 
@@ -768,7 +769,8 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
             )}
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Acciones principales */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 bg-white/5 p-1 rounded-lg self-end md:self-auto">
             <button onClick={handleUndo} disabled={strokes.length === 0} className="p-2 text-text-muted hover:text-white disabled:opacity-50" title="Deshacer">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
             </button>
@@ -831,8 +833,8 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
         </div>
 
         {/* Row 2 (Mobile) / Middle (Desktop): Colors and Widths */}
-        <div className="flex justify-start items-center w-full md:w-auto gap-4">
-          <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-lg flex-wrap items-center">
+        <div className="flex flex-row flex-wrap justify-between md:justify-start items-center w-full md:w-auto gap-2 md:gap-4">
+          <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-lg flex-nowrap overflow-x-auto no-scrollbar items-center max-w-[60vw] md:max-w-none">
             {[...colores, ...customColors].map(c => (
               <button 
                 key={c} 

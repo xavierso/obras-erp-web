@@ -667,8 +667,8 @@ export function LienzoDibujo({ initialData, onSave, saving = false }: LienzoDibu
 
   const handleExportPDF = async () => {
     const { jsPDF } = await import('jspdf');
-    const mainWidth = containerRef.current?.clientWidth || 800;
-    const mainHeight = containerRef.current?.clientHeight || 600;
+    const mainWidth = A4_WIDTH;
+    const mainHeight = A4_HEIGHT;
 
     const doc = new jsPDF({
       orientation: mainWidth > mainHeight ? 'landscape' : 'portrait',

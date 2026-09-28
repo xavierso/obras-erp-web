@@ -52,91 +52,113 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col bg-surface border-r border-white/5 py-6 z-20 transition-all duration-300 relative ${
-        isSidebarCollapsed ? 'w-24 px-4 items-center' : 'w-72 px-6'
-      }`}>
-        {/* Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-4 top-10 w-8 h-8 rounded-full bg-brand-blue border-[3px] border-background flex items-center justify-center text-white hover:bg-brand-blue-light transition-colors shadow-md z-50 cursor-pointer"
-        >
-          {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" strokeWidth={3} /> : <ChevronLeft className="w-4 h-4" strokeWidth={3} />}
-        </button>
-
-        <div className={`flex items-center transition-all duration-300 ${
-          isSidebarCollapsed ? 'justify-center h-16 mt-2 mb-6' : 'justify-center h-20 w-full mt-2 mb-2'
+      {/* Desktop Sidebar Wrapper for floating effect */}
+      <div className="hidden lg:flex flex-col py-6 pl-6 z-20">
+        <aside className={`flex flex-col bg-surface border border-white/10 rounded-[28px] h-full shadow-[0_28px_60px_rgba(12,26,44,0.32)] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] relative py-[34px] ${
+          isSidebarCollapsed ? 'w-[98px]' : 'w-[300px]'
         }`}>
-          <img 
-            src="/logo-diam.png" 
-            alt="DIAM Logo" 
-            className={`object-contain transition-all duration-300 ${
-              isSidebarCollapsed ? 'h-14 w-auto drop-shadow-md' : 'h-[230px] w-auto drop-shadow-lg ml-2 -my-20'
-            }`} 
-          />
-        </div>
-        
-        <nav className="flex-1 space-y-2 w-full pt-8">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname.startsWith(link.href);
-            return (
-              <Link 
-                key={link.name} 
-                href={link.href}
-                className={`flex items-center px-3 py-3 rounded-xl transition-all duration-200 ${
-                  isSidebarCollapsed ? 'justify-center w-12 h-12 mx-auto' : 'gap-3 w-full'
-                } ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-brand-navy to-transparent border-l-2 border-brand-blue text-text-main shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
-                    : 'text-text-muted hover:text-text-main hover:bg-white/5 border-l-2 border-transparent'
-                }`}
-                title={isSidebarCollapsed ? link.name : undefined}
-              >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-brand-blue' : 'text-text-muted opacity-80'}`} strokeWidth={isActive ? 2.5 : 2} />
-                {!isSidebarCollapsed && (
-                  <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'} whitespace-nowrap overflow-hidden`}>{link.name}</span>
-                )}
-              </Link>
-            )
-          })}
-        </nav>
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="absolute -right-[22px] top-8 w-[26px] h-[50px] bg-surface border-y border-r border-white/10 rounded-r-[12px] flex items-center justify-center text-text-muted hover:text-white transition-colors cursor-pointer z-50"
+          >
+            {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" strokeWidth={2.5} /> : <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />}
+          </button>
 
-        {user && (
-          <div className="mt-auto pt-6 border-t border-white/5 w-full">
-            <div className={`glass-panel rounded-xl flex items-center ${
-              isSidebarCollapsed ? 'p-2 justify-center' : 'p-4 gap-3'
+          {/* Top Section: Logo */}
+          <div className="flex items-center min-h-[44px] px-8 mb-6 relative">
+            <div className="flex-shrink-0 flex items-center justify-center w-[38px] h-[38px]">
+              <img 
+                src="/logo-diam.png" 
+                alt="DIAM" 
+                className="w-full h-full object-contain drop-shadow-md" 
+              />
+            </div>
+            <span className={`absolute left-[84px] text-[26px] font-bold text-white whitespace-nowrap tracking-tight transition-opacity duration-300 ${
+              isSidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
-              <div className="w-10 h-10 flex-shrink-0 rounded-full bg-surface-2 flex items-center justify-center border border-white/10">
-                <span className="text-sm font-bold text-brand-blue">
+              Obras ERP
+            </span>
+          </div>
+
+          {/* Profile Section */}
+          {user && (
+            <div className={`flex flex-col items-center flex-shrink-0 transition-all duration-400 mb-6 px-[18px] ${
+              isSidebarCollapsed ? 'h-[40px]' : 'h-[120px]'
+            }`}>
+              <div className={`rounded-full bg-surface-2 flex items-center justify-center border border-white/10 transition-all duration-400 overflow-hidden shadow-sm ${
+                isSidebarCollapsed ? 'w-[40px] h-[40px]' : 'w-[68px] h-[68px]'
+              }`}>
+                <span className={`font-bold text-brand-blue ${isSidebarCollapsed ? 'text-lg' : 'text-3xl'}`}>
                   {user.nombre.charAt(0).toUpperCase()}
                 </span>
               </div>
-              {!isSidebarCollapsed && (
-                <>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-text-main truncate">{user.nombre}</p>
-                    <p className="text-xs text-text-muted truncate">{user.email}</p>
-                  </div>
-                  <button 
-                    onClick={logout}
-                    className="p-2 flex-shrink-0 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors"
-                    title="Cerrar sesión"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </>
-              )}
+              
+              <div className={`flex flex-col items-center text-center mt-3 transition-opacity duration-300 ${
+                isSidebarCollapsed ? 'opacity-0 pointer-events-none hidden' : 'opacity-100'
+              }`}>
+                <p className="text-[17px] font-semibold text-white whitespace-nowrap">{user.nombre}</p>
+                <p className="text-[12px] text-text-muted whitespace-nowrap mt-0.5 max-w-[240px] truncate">{user.email}</p>
+              </div>
             </div>
-          </div>
-        )}
-      </aside>
+          )}
+          
+          <nav className="flex-1 flex flex-col gap-1 w-full overflow-y-auto custom-scrollbar">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname.startsWith(link.href);
+              return (
+                <Link 
+                  key={link.name} 
+                  href={link.href}
+                  className={`relative flex items-center gap-[14px] h-[52px] mx-[16px] px-[16px] rounded-[12px] transition-all duration-250 group ${
+                    isActive 
+                      ? 'bg-brand-blue/10 text-white' 
+                      : 'bg-transparent text-text-muted hover:text-white'
+                  }`}
+                  title={isSidebarCollapsed ? link.name : undefined}
+                >
+                  {isActive && (
+                    <div className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-1.5 h-1/2 bg-brand-blue rounded-r-md transition-all duration-300" />
+                  )}
+                  <Icon className={`flex-shrink-0 transition-colors duration-250 ${
+                    isActive ? 'text-brand-blue w-5 h-5' : 'w-5 h-5'
+                  }`} strokeWidth={isActive ? 2.5 : 2} />
+                  
+                  <span className={`text-[15px] font-medium whitespace-nowrap transition-opacity duration-300 ${
+                    isSidebarCollapsed ? 'opacity-0 hidden' : 'opacity-100'
+                  }`}>
+                    {link.name}
+                  </span>
+                </Link>
+              )
+            })}
+          </nav>
+
+          {user && (
+            <div className="mt-auto pt-[20px]">
+              <button 
+                onClick={logout}
+                className="relative flex items-center gap-[16px] h-[64px] mx-[18px] px-[20px] rounded-[14px] transition-all duration-250 group bg-transparent text-text-muted hover:text-error hover:bg-error/10 w-[calc(100%-36px)]"
+                title={isSidebarCollapsed ? "Cerrar sesión" : undefined}
+              >
+                <LogOut className="w-6 h-6 flex-shrink-0" strokeWidth={2} />
+                <span className={`text-[17px] font-medium whitespace-nowrap transition-opacity duration-300 ${
+                  isSidebarCollapsed ? 'opacity-0 hidden' : 'opacity-100'
+                }`}>
+                  Salir
+                </span>
+              </button>
+            </div>
+          )}
+        </aside>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto pb-24 lg:pb-0 custom-scrollbar relative">
         {/* Subtle background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-64 bg-brand-navy/30 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-        <div className="p-4 md:p-10 max-w-6xl mx-auto">
+        <div className="p-4 md:p-10 max-w-6xl mx-auto pt-16 md:pt-10">
           {children}
         </div>
       </main>

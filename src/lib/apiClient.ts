@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -37,6 +37,9 @@ export class ApiException extends Error {
   }
 
   static fromAxiosError(error: unknown) {
+    if (error instanceof ApiException) {
+      return error;
+    }
     const err = error as any;
     if (err.response?.data?.detail) {
       const detail = err.response.data.detail;

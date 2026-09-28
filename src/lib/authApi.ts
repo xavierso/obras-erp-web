@@ -23,6 +23,14 @@ export const authApi = {
     }
   },
 
+  confirmarEmail: async (token: string): Promise<void> => {
+    try {
+      await apiClient.post('/auth/confirmar', { token });
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
+  },
+
   login: async (email: string, password: string): Promise<string> => {
     try {
       const formData = new FormData();

@@ -53,5 +53,15 @@ export const perfilApi = {
     } catch (error) {
       throw ApiException.fromAxiosError(error);
     }
+  },
+
+  cerrarCuenta: async (nombre_confirmacion: string, password: string): Promise<void> => {
+    try {
+      await apiClient.delete('/perfil/cerrar-cuenta', {
+        data: { nombre_confirmacion, password }
+      });
+    } catch (error) {
+      throw ApiException.fromAxiosError(error);
+    }
   }
 };

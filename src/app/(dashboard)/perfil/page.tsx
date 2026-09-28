@@ -32,6 +32,13 @@ export default function PerfilPage() {
   const [invitando, setInvitando] = useState(false);
   const [mensajeInvitacion, setMensajeInvitacion] = useState('');
 
+  // Estados de Cerrar Cuenta
+  const [showModalCerrarCuenta, setShowModalCerrarCuenta] = useState(false);
+  const [cerrarNombreConfirmacion, setCerrarNombreConfirmacion] = useState('');
+  const [cerrarPassword, setCerrarPassword] = useState('');
+  const [cerrandoCuenta, setCerrandoCuenta] = useState(false);
+  const { logout } = useAuth();
+
   const fetchDatos = async () => {
     try {
       const promises: Promise<unknown>[] = [equipoApi.obtenerResumen()];
@@ -63,8 +70,10 @@ export default function PerfilPage() {
   };
 
   useEffect(() => {
-    fetchDatos();
-  }, []);
+    if (user) {
+      fetchDatos();
+    }
+  }, [user?.id]);
 
   const handleGuardarPerfil = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +132,24 @@ export default function PerfilPage() {
       await fetchDatos();
     } catch (err) {
       alert('Error al cancelar la invitación');
+    }
+  };
+
+  const handleCerrarCuenta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cerrarNombreConfirmacion !== perfil?.nombre_empresa) {
+      alert('El nombre de la empresa no coincide.');
+      return;
+    }
+    setCerrandoCuenta(true);
+    try {
+      await perfilApi.cerrarCuenta(cerrarNombreConfirmacion, cerrarPassword);
+      alert('Cuenta cerrada exitosamente.');
+      logout();
+    } catch (err: any) {
+      alert(err.message || 'Error al cerrar cuenta');
+    } finally {
+      setCerrandoCuenta(false);
     }
   };
 
@@ -246,6 +273,66 @@ export default function PerfilPage() {
                 </div>
               </form>
             </GlassCard>
+
+            <div className="mt-8 pt-8 border-t border-error/20">
+              <h3 className="text-lg font-bold text-error mb-2">Zona de Peligro</h3>
+              <p className="text-text-muted text-sm mb-4">
+                Desactivar la cuenta de la empresa y revocar el acceso a todos los inspectores. 
+                Los datos históricos se mantendrán por seguridad, pero nadie podrá acceder.
+              </p>
+              <Button 
+                variant="danger" 
+                onClick={() => setShowModalCerrarCuenta(true)}
+              >
+                Cerrar Cuenta de Empresa
+              </Button>
+            </div>
+            
+            {/* Modal Cerrar Cuenta */}
+            {showModalCerrarCuenta && (
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                <div className="bg-surface border border-white/10 rounded-2xl p-6 max-w-md w-full">
+                  <h3 className="text-xl font-bold text-error mb-4">¿Cerrar cuenta definitivamente?</h3>
+                  <p className="text-text-muted text-sm mb-6">
+                    Esta acción desactivará tu perfil y el de todos tus inspectores. 
+                    Para confirmar, escribe <strong>{perfil?.nombre_empresa}</strong> y tu contraseña actual.
+                  </p>
+                  
+                  <form onSubmit={handleCerrarCuenta} className="space-y-4">
+                    <div>
+                      <label className="block text-text-muted text-xs font-semibold mb-1">Nombre de la Empresa</label>
+                      <input 
+                        type="text"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-text-main focus:outline-none focus:border-error"
+                        value={cerrarNombreConfirmacion}
+                        onChange={(e) => setCerrarNombreConfirmacion(e.target.value)}
+                        placeholder={perfil?.nombre_empresa}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-text-muted text-xs font-semibold mb-1">Contraseña Actual</label>
+                      <input 
+                        type="password"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-text-main focus:outline-none focus:border-error"
+                        value={cerrarPassword}
+                        onChange={(e) => setCerrarPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="flex gap-3 pt-4">
+                      <Button type="button" variant="outlined" className="flex-1" onClick={() => setShowModalCerrarCuenta(false)}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" variant="danger" className="flex-1" disabled={cerrandoCuenta || cerrarNombreConfirmacion.trim().toLowerCase() !== (perfil?.nombre_empresa || '').trim().toLowerCase()}>
+                        {cerrandoCuenta ? 'Cerrando...' : 'Confirmar'}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

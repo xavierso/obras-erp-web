@@ -1,18 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/authApi';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Button } from '@/components/ui/Button';
 
-import Image from 'next/image';
-
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const { login } = useAuth();
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMsg('Te hemos enviado un email de confirmación. Por favor, revisa tu bandeja de entrada para verificar tu cuenta antes de iniciar sesión.');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +58,12 @@ export default function LoginPage() {
             {error && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl text-sm font-medium text-center">
                 {error}
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-2xl text-sm font-medium text-center">
+                {successMsg}
               </div>
             )}
             
@@ -106,5 +118,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-white">Cargando...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -11,6 +11,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
+import { NotificacionesDropdown } from '@/components/NotificacionesDropdown';
 import { 
   Briefcase, 
   MapPin, 
@@ -98,9 +99,12 @@ export default function HomePage() {
             Buenos días, {user?.nombre || 'Inspector'}
           </h1>
         </div>
-        <div className="flex items-center gap-2 text-sm text-text-muted bg-surface/50 px-4 py-2 rounded-full border border-white/5">
-          <Activity className="w-4 h-4 text-success" />
-          <span>Sistema en línea</span>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 text-sm text-text-muted bg-surface/50 px-4 py-2 rounded-full border border-white/5">
+            <Activity className="w-4 h-4 text-success" />
+            <span>Sistema en línea</span>
+          </div>
+          <NotificacionesDropdown />
         </div>
       </div>
 

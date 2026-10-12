@@ -7,7 +7,7 @@ import { cronogramaApi, ActividadCronograma, EstadoActividad } from '@/lib/crono
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
-import { isUserAdmin, isUserDirector } from '@/lib/authApi';
+import { isUserAdmin, isUserDirector, isUserLector } from '@/lib/authApi';
 import { AdvancedGantt } from '@/components/cronograma/AdvancedGantt';
 import { toast } from 'react-hot-toast';
 
@@ -17,7 +17,7 @@ export default function CronogramaPage() {
   const obraId = parseInt(params.id as string, 10);
   const { user } = useAuth();
   const canDelete = isUserAdmin(user) || isUserDirector(user);
-  const canEdit = canDelete; // simplificación
+  const canEdit = !isUserLector(user);
 
   const [obra, setObra] = useState<Obra | null>(null);
   const [actividades, setActividades] = useState<ActividadCronograma[]>([]);
@@ -240,6 +240,7 @@ export default function CronogramaPage() {
           <AdvancedGantt 
             actividades={actividades}
             canEdit={canEdit}
+            canDelete={canDelete}
             onEdit={openForm}
             onDelete={handleDelete}
             onUpdateFechas={handleUpdateFechas}

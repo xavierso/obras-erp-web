@@ -5,13 +5,14 @@ import { Pencil, Trash2 } from 'lucide-react';
 interface AdvancedGanttProps {
   actividades: ActividadCronograma[];
   canEdit: boolean;
+  canDelete?: boolean;
   onEdit: (act: ActividadCronograma) => void;
   onDelete: (id: number) => void;
   onUpdateFechas: (id: number, inicio: string, fin: string) => Promise<void>;
   onAddDependency: (fromId: number, toId: number) => Promise<void>;
 }
 
-export function AdvancedGantt({ actividades, canEdit, onEdit, onDelete, onUpdateFechas, onAddDependency }: AdvancedGanttProps) {
+export function AdvancedGantt({ actividades, canEdit, canDelete = canEdit, onEdit, onDelete, onUpdateFechas, onAddDependency }: AdvancedGanttProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Drag state
@@ -323,10 +324,13 @@ export function AdvancedGantt({ actividades, canEdit, onEdit, onDelete, onUpdate
               <React.Fragment key={act.id}>
                 {/* Info Column */}
                 <div 
-                  className="border-r border-b border-white/10 p-2 flex items-center justify-between group bg-surface/20 hover:bg-surface/50 transition-colors h-[45px]"
+                  className={`border-r border-b border-white/10 p-2 flex items-center justify-between group bg-surface/20 hover:bg-surface/50 transition-colors h-[45px] ${canEdit ? 'cursor-pointer' : ''}`}
                   data-task-id={act.id}
+                  onClick={() => {
+                    if (canEdit) onEdit(act);
+                  }}
                 >
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden min-w-0 flex-1 mr-2">
                     <div className="font-semibold text-[13px] text-text-main truncate" title={act.nombre}>{act.nombre}</div>
                     <div className="flex items-center space-x-2">
                       <span className={`text-[9px] px-1 py-0.5 rounded font-bold uppercase text-white ${getStatusColor(act.estado)}`}>
@@ -335,12 +339,32 @@ export function AdvancedGantt({ actividades, canEdit, onEdit, onDelete, onUpdate
                     </div>
                   </div>
                   
-                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 relative z-20">
-                    <button onClick={() => onEdit(act)} className="p-1 text-text-muted hover:text-brand-blue">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="flex items-center flex-shrink-0 relative z-20 space-x-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     {canEdit && (
-                      <button onClick={() => onDelete(act.id)} className="p-1 text-text-muted hover:text-error">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(act);
+                        }} 
+                        className="p-1.5 text-text-muted hover:text-brand-blue hover:bg-white/10 rounded transition-colors"
+                        title="Editar actividad"
+                        aria-label="Editar actividad"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(act.id);
+                        }} 
+                        className="p-1.5 text-text-muted hover:text-error hover:bg-white/10 rounded transition-colors"
+                        title="Eliminar actividad"
+                        aria-label="Eliminar actividad"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
